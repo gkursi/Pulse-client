@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "id": "pulse",
+  "version": "${version}",
+
+  "name": "Pulse Client",
+  "description": "Anarchy / utility client",
+  "authors": [
+    "_qweru"
+  ],
+  "contact": {
+    "homepage": "https://qweru.xyz",
+    "sources": "https://github.com/gkursi/pulse"
+  },
+
+  "license": "CC0-1.0",
+  "icon": "assets/pulse/icon.png",
+
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "xyz.qweru.pulse.client.PulseClient"
+    ]
+  },
+  "mixins": [
+    "pulse.mixins.json"
+  ],
+
+  "depends": {
+    "fabricloader": "*",
+    "minecraft": "~1.21",
+    "java": ">=17",
+    "fabric-api": "*"
+  },
+  "suggests": {
+    "another-mod": "*"
+  }
+}

@@ -1,0 +1,130 @@
+plugins {
+	id 'fabric-loom' version '1.8-SNAPSHOT'
+	id 'maven-publish'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+repositories {
+	// Add repositories to retrieve artifacts from in here.
+	// You should only use this when depending on other mods because
+	// Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
+	// See https://docs.gradle.org/current/userguide/declaring_repositories.html
+	// for more information about repositories
+	maven {
+		name = "meteor-maven"
+		url = "https://maven.meteordev.org/releases"
+	}
+	mavenLocal()
+	maven {
+		name 'Gegy'
+		url 'https://maven.gegy.dev'
+	}
+	mavenCentral()
+	maven {
+		name = 'Ladysnake Mods'
+		url = 'https://maven.ladysnake.org/releases'
+		content {
+			includeGroup 'io.github.ladysnake'
+			includeGroup 'org.ladysnake'
+			includeGroupByRegex 'dev\\.onyxstudios.*'
+		}
+	}
+	mavenCentral()
+	maven { url 'https://jitpack.io' }
+}
+
+configurations {
+	implementation.extendsFrom lib
+	api.extendsFrom lib
+}
+
+dependencies {
+	// To change the versions see the gradle.properties file
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+	lib "meteordevelopment:orbit:0.2.3"
+	lib 'com.github.JnCrMx:discord-game-sdk4j:v0.5.5'
+	modImplementation "org.ladysnake:satin:${satin_version}"
+	// Include Satin as a Jar-in-Jar dependency (optional)
+	include "org.ladysnake:satin:${satin_version}"
+	include modImplementation("io.github.0x3c50.renderer:renderer-fabric:1.2.1")
+	lib 'org.reflections:reflections:0.10.2'
+	implementation group: 'com.personthecat', name: 'fastnoise', version: '0.10'
+	implementation 'se.michaelthelin.spotify:spotify-web-api-java:8.4.1'
+
+//	include modImplementation(files("./libs/baritone-api-fabric-1.10.2-9-g9eefcbc9.jar"))
+
+	//litematica
+	//modImplementation "curse.maven:litematica-${project.litematica_projectid}:${project.litematica_fileid}"
+//	modImplementation 'com.github.sakura-ryoko:litematica:1.21-sakura.23'
+//	//modImplementation "fi.dy.masa.malilib:malilib-fabric-${project.minecraft_version}:${project.malilib_version}"
+//	modImplementation 'com.github.sakura-ryoko:malilib:1.21-sakura.8'
+
+}
+
+base {
+	archivesName = project.archives_base_name
+}
+
+processResources {
+	inputs.property "version", project.version
+
+	filesMatching("fabric.mod.json") {
+		expand "version": project.version
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 17
+}
+
+java {
+	// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
+	// if it is present.
+	// If you remove this line, sources will not be generated.
+	withSourcesJar()
+
+	sourceCompatibility = JavaVersion.VERSION_17
+	targetCompatibility = JavaVersion.VERSION_17
+}
+
+jar {
+	dependsOn configurations.lib
+	from {
+		duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+		configurations.lib.collect {
+			zipTree(it)
+		}
+	}
+	from("LICENSE") {
+		rename { "${it}_${base.archivesName.get()}"}
+	}
+	manifest {
+		attributes 'Implementation-Title': 'Gradle Quickstart',
+				'Implementation-Version': version,
+				'Main-Class': 'xyz.qweru.pulse.Main'
+	}
+}
+
+// configure the maven publication
+publishing {
+	publications {
+		create("mavenJava", MavenPublication) {
+			artifactId = project.archives_base_name
+			from components.java
+		}
+	}
+
+	// See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
+	repositories {
+		// Add repositories to publish to here.
+		// Notice: This block does NOT have the same function as the block in the top level.
+		// The repositories here will be used for publishing your artifact, not for
+		// retrieving dependencies.
+	}
+}

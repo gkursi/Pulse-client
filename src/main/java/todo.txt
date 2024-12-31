@@ -1,0 +1,14 @@
+todo
+# additions
+make the discord rpc a toggleable module
+
+add block selection setting
+add entity selection setting
+implement rage system (if a player is in the rage list, all modules should prioritize attacking that player)
+move config to json
+
+# fixes
+fix box breaker not swapping sometimes
+fix hidden settings not being hidden
+fix discord rpc
+optimize image display
