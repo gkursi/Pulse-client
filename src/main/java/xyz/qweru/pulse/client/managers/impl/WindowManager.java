@@ -3,11 +3,8 @@ package xyz.qweru.pulse.client.managers.impl;
 import org.jetbrains.annotations.Nullable;
 import xyz.qweru.pulse.client.managers.Manager;
 import xyz.qweru.pulse.client.render.ui.color.ColorScheme;
-import xyz.qweru.pulse.client.render.ui.gui.screens.ColorScreen;
-import xyz.qweru.pulse.client.render.ui.gui.screens.HudConfigScreen;
+import xyz.qweru.pulse.client.render.ui.gui.screens.*;
 import xyz.qweru.pulse.client.render.ui.gui.PulseScreen;
-import xyz.qweru.pulse.client.render.ui.gui.screens.MainScreen;
-import xyz.qweru.pulse.client.render.ui.gui.screens.ModuleScreen;
 
 public class WindowManager extends Manager<PulseScreen> {
 
@@ -19,6 +16,7 @@ public class WindowManager extends Manager<PulseScreen> {
         addItem(new ModuleScreen());
         addItem(new HudConfigScreen());
         addItem(new ColorScreen(null, null));
+        addItem(new ConfigScreen());
     }
 
     public void applyTheme(ColorScheme theme) {

@@ -8,6 +8,7 @@ import xyz.qweru.pulse.client.render.ui.gui.Widget;
 import xyz.qweru.pulse.client.render.ui.gui.screens.ModuleScreen;
 import xyz.qweru.pulse.client.systems.modules.ClientModule;
 import xyz.qweru.pulse.client.systems.modules.impl.setting.ClickGUI;
+import xyz.qweru.pulse.client.systems.modules.settings.impl.TextSetting;
 import xyz.qweru.pulse.client.utils.InputUtil;
 import xyz.qweru.pulse.client.utils.annotations.Status;
 import xyz.qweru.pulse.client.utils.render.AnimationUtil;
@@ -20,11 +21,17 @@ import static xyz.qweru.pulse.client.PulseClient.mc;
 
 public class ModuleWidget extends Widget {
     public ClientModule module;
+    private TextSetting searchAccessor;
     public boolean expanded = false;
 
-    public ModuleWidget(float x, float y, float w, float h, ClientModule module) {
+    public ModuleWidget(float x, float y, float w, float h, ClientModule module, TextSetting searchAccessor) {
         super(x, y, w, h);
         this.module = module;
+        this.searchAccessor = searchAccessor;
+    }
+
+    public ModuleWidget(float x, float y, float w, float h, ClientModule module) {
+        this(x, y, w, h, module, null);
     }
 
     Pulse2D.GradientRect btnColor = Pulse2D.GradientRect.of(Color.WHITE);
@@ -82,6 +89,9 @@ public class ModuleWidget extends Widget {
         }
 
         RenderUtil.textRenderer.drawColoredString(context.matrixStack(), string, x + 2 + 2, y + RenderUtil.fontOffsetY);
+        if(searchAccessor != null && !searchAccessor.getValue().isBlank() && module.getName().toLowerCase().contains(searchAccessor.getValue().toLowerCase())) {
+            Pulse2D.drawRound(context.matrixStack(), x + 3 , y + RenderUtil.fontOffsetY + string.getHeight() + 2, string.getWidth() + 1, 0.7f, 1, context.colorScheme().TEXT());
+        }
         if(hovered) {
             RenderUtil.textRenderer.drawString(context.matrixStack(), module.getDescription(), 2, context.screenHeight() - 2 - RenderUtil.textRenderer.getStringHeight(module.getDescription(), false), context.colorScheme().TEXT().getRGB());
         }

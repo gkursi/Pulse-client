@@ -17,9 +17,6 @@ public class TextSettingWidget extends SettingWidget {
         this.setting = setting;
     }
 
-    float textX = x + 2;
-    float textY = y + 3;
-
     TimerUtil blinkTimer = new TimerUtil();
     boolean showBlink = true;
     @Override
@@ -37,7 +34,7 @@ public class TextSettingWidget extends SettingWidget {
         FontRenderer.ColoredString string = FontRenderer.ColoredString.of(setting.getName() + ": ", context.colorScheme().TEXT());
         string.add((inputMode ? tempString : setting.getValue()), context.colorScheme().MUTED_TEXT());
 
-        RenderUtil.textRenderer.drawString(context.matrixStack(), text, textX, textY + RenderUtil.fontOffsetY, context.colorScheme().TEXT().getRGB());
+        RenderUtil.textRenderer.drawString(context.matrixStack(), text, x + 2, y + (h - string.getHeight()) / 2 + RenderUtil.fontOffsetY, context.colorScheme().TEXT().getRGB());
         if(hovered) {
             RenderUtil.textRenderer.drawString(context.matrixStack(), setting.getDescription(), 2, context.screenHeight() - 2 - RenderUtil.textRenderer.getStringHeight(setting.getDescription(), false), context.colorScheme().TEXT().getRGB());
         }
@@ -83,10 +80,6 @@ public class TextSettingWidget extends SettingWidget {
                 shift = false;
             }
         }
-    }
-
-    float clamp(float min, float max, float value) {
-        return Math.min(max, Math.max(value, min));
     }
 
     @Override

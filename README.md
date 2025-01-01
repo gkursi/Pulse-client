@@ -17,7 +17,6 @@ Feel free to open pull requests.
 Alternatively you can download a prebuilt jar from GitHub actions
 ### Optional dependencies
 * Playerctl (linux only) has to be installed to use the playerctl hud module
-
 ### Binds
 * Open gui - RControl (can be changed by binding the clickgui module to something else)
 * Toggle module - Mouse 1
@@ -33,6 +32,7 @@ Alternatively you can download a prebuilt jar from GitHub actions
 * part of 2d renderer - https://github.com/Pan4ur/ThunderHack-Recode
 * damage utils - https://github.com/MeteorDevelopment/meteor-client/
 * misc. utils - Lumina Client premium
+* font renderer - no idea but it's not mine
 ### People
 * \_qweru\_ (me) - created the client
 * k2enny - minor radar fixes, cape module
