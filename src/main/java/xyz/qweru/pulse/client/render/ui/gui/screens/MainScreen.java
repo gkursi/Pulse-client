@@ -24,11 +24,13 @@ public class MainScreen extends PulseScreen {
     @Override
     protected void init() {
         super.init();
+        // categories
         float x = 10;
         float y = 10;
 
         for (Category category : Category.values()) {
-            WidgetGroup group = new WidgetGroup();
+            if(category == Category.HUD || category == Category.SETTING) continue;
+            WidgetGroup group = new WidgetGroup(true);
             CategoryBackgroundWidget bw = new CategoryBackgroundWidget(x, y, cellW, cellH);
             group.add(bw);
             group.add(new CategoryTitleWidget(x, y, cellW, cellH, category));

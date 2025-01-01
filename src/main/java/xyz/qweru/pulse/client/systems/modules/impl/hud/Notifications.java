@@ -45,7 +45,7 @@ public class Notifications extends HudModule {
             drawContext.drawBorder((int) x, (int) y, (int) width, (int) height, ThemeInfo.COLORSCHEME.getBorderColor().getRGB());
         }
 
-        if(notifications.size() > MAX) notifications.setSize(3);
+        if(notifications.size() > MAX) notifications.setSize(MAX - 1);
 
         Iterator<Notification> iterator = notifications.iterator();
 
@@ -65,11 +65,7 @@ public class Notifications extends HudModule {
                 if(notification.life.get() >= (0.2 * MAX_LIFE) ) {
                     Pulse2D.drawRound(context.matrixStack(), (float) nX, (float) nY, (float) (
                             ((notification.life.get() - MAX_LIFE * 0.2) / (MAX_LIFE * 0.8)) * nW
-                    ), (float) 8, Pulse2D.cornerRad, switch (notification.type) {
-                        case INFO -> Color.BLUE;
-                        case WARN -> Color.ORANGE;
-                        case ERROR -> Color.RED;
-                    });
+                    ), (float) 8, Pulse2D.cornerRad, context.colorScheme().getBorderColor().darker());
                 }
 
                 Pulse2D.drawRound(context.matrixStack(), (float) nX + Pulse2D.borderWidth, (float) nY + Pulse2D.borderWidth,

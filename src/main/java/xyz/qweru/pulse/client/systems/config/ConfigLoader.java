@@ -20,15 +20,6 @@ public class ConfigLoader {
         this.filepath = filepath;
     }
 
-    /**
-     * NBTList setting order:
-     * 0 - module name
-     * 1 - module description
-     * 2 - category
-     * 3 - bind (implement!)
-     * 4+ - other settings (format: settingname::valuetype::value) (implement!)
-     */
-
     public void load() {
         PulseClient.LOGGER.info("Using config from {}", filepath.toString());
         if(!filepath.toFile().exists()) {

@@ -13,6 +13,7 @@ import net.minecraft.util.math.Vec3d;
 import org.joml.Matrix4f;
 import org.joml.Vector3d;
 import org.joml.Vector4f;
+import xyz.qweru.pulse.client.render.ui.gui.Widget;
 import xyz.qweru.pulse.client.utils.render.font.Font;
 import xyz.qweru.pulse.client.utils.render.font.FontRenderer;
 
@@ -111,6 +112,10 @@ public class RenderUtil {
 
     public static boolean isInside(double mouseX, double mouseY, float x1, float y1, float x2, float y2) {
         return mouseX > x1 && mouseX < x2 && mouseY > y1 && mouseY < y2;
+    }
+
+    public static boolean isInside(double mouseX, double mouseY, Widget widget) {
+        return isInside(mouseX, mouseY, widget.x, widget.y, widget.x + widget.w, widget.y + widget.h);
     }
 
     public static Vector3d set(Vector3d vec, Vec3d v) {

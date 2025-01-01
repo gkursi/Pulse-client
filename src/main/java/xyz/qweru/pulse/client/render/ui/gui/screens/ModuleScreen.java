@@ -30,7 +30,7 @@ public class ModuleScreen extends PulseScreen {
         float spacing = 3.5f;
         float sH = 14;
 
-        PulseClient.LOGGER.debug("ModuleScreen > module: {} ({})", curModule.getName(), curModule.getClass().getSimpleName());
+        PulseClient.LOGGER.debug("module: {} ({})", curModule.getName(), curModule.getClass().getSimpleName());
 
         height += sH;
         for (Setting s : curModule.getSettings()) {

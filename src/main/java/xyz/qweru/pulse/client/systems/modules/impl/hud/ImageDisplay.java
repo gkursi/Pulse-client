@@ -43,6 +43,13 @@ public class ImageDisplay extends HudModule {
             .defaultValue(200)
             .build();
 
+    NumberSetting scale = numberSetting()
+            .name("Scale")
+            .description("Image / gif scale")
+            .range(0, 5)
+            .defaultValue(1)
+            .build();
+
     public ImageDisplay() {
         hudBuilderOf(this)
                 .pos(2, 2)
@@ -52,7 +59,7 @@ public class ImageDisplay extends HudModule {
                 .description("Displays images / gifs")
                 .category(Category.HUD)
                 .settings("File", path)
-                .settings("Settings", mode, delayMS);
+                .settings("Settings", mode, delayMS, scale);
         timer.reset();
 
         path.addOnToggle(() -> {
@@ -77,7 +84,7 @@ public class ImageDisplay extends HudModule {
         if(path.getValue() == "") return;
         switch (mode.getCurrent()) {
             case "gif" -> drawGifFrames(new File(path.getValue()), drawContext);
-            case "png/jpg/jpeg" -> Renderer2d.renderTexture(context.getMatrices(), Identifier.of("pulse", "memory/imgdisplay.png"), this.x, this.y, this.width, this.height);
+            case "png/jpg/jpeg" -> Renderer2d.renderTexture(context.getMatrices(), Identifier.of("pulse", "memory/imgdisplay.png"), this.x, this.y, this.width * scale.getValue(), this.height * scale.getValue());
         }
     }
 
@@ -96,7 +103,7 @@ public class ImageDisplay extends HudModule {
             BufferedImage image = reader.read(gifIndex);
             if(image != null) {
                 TextureUtil.registerBufferedImageTexture(Identifier.of("pulse", "memory/imgdisplay-gif.png"), image);
-                Renderer2d.renderTexture(context.getMatrices(), Identifier.of("pulse", "memory/imgdisplay-gif.png"), this.x, this.y, this.width, this.height);
+                Renderer2d.renderTexture(context.getMatrices(), Identifier.of("pulse", "memory/imgdisplay-gif.png"), this.x, this.y, this.width * scale.getValue(), this.height * scale.getValue());
             }
             if(timer.hasReached(delayMS.getValue())) {
                 gifIndex++;

@@ -2,10 +2,16 @@ package xyz.qweru.pulse.client.render.ui.gui.screens;
 
 import me.x150.renderer.render.Renderer2d;
 import net.minecraft.client.gui.DrawContext;
+import xyz.qweru.pulse.client.PulseClient;
 import xyz.qweru.pulse.client.managers.impl.ModuleManager;
 import xyz.qweru.pulse.client.render.renderer.Pulse2D;
 import xyz.qweru.pulse.client.render.ui.color.ThemeInfo;
 import xyz.qweru.pulse.client.render.ui.gui.PulseScreen;
+import xyz.qweru.pulse.client.render.ui.gui.WidgetGroup;
+import xyz.qweru.pulse.client.render.ui.gui.widgets.CategoryBackgroundWidget;
+import xyz.qweru.pulse.client.render.ui.gui.widgets.CategoryTitleWidget;
+import xyz.qweru.pulse.client.render.ui.gui.widgets.ModuleWidget;
+import xyz.qweru.pulse.client.systems.modules.Category;
 import xyz.qweru.pulse.client.systems.modules.ClientModule;
 import xyz.qweru.pulse.client.systems.modules.HudModule;
 import xyz.qweru.pulse.client.systems.modules.impl.setting.HudEditor;
@@ -20,8 +26,36 @@ public class HudConfigScreen extends PulseScreen {
         blur = false;
     }
 
+    float cellW = 82;
+    float cellH = 13;
+
+    @Override
+    protected void init() {
+        super.init();
+        float x = 10;
+        float y = 10;
+
+        Category category = Category.HUD;
+        WidgetGroup group = new WidgetGroup(true);
+        CategoryBackgroundWidget bw = new CategoryBackgroundWidget(x, y, cellW, cellH);
+        group.add(bw);
+        group.add(new CategoryTitleWidget(x, y, cellW, cellH, category));
+
+        y += cellH + Pulse2D.borderWidth;
+        for (ClientModule clientModule : ModuleManager.INSTANCE.getModulesByCategory(category)) {
+            group.add(new ModuleWidget(x, y, cellW, cellH, clientModule));
+            y += cellH;
+        }
+        y += 1;
+
+        bw.resizeTo(y);
+
+        widgetList.add(group);
+    }
+
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        super.mouseClicked(mouseX, mouseY, button);
         if(button != InputUtil.MOUSE_BUTTON_1) return false;
         for (ClientModule clientModule : ModuleManager.INSTANCE.getItemList()) {
             if(clientModule instanceof HudModule hm) {
@@ -41,6 +75,7 @@ public class HudConfigScreen extends PulseScreen {
 
     @Override
     public void mouseMoved(double mouseX, double mouseY) {
+        super.mouseMoved(mouseX, mouseY);
         for (ClientModule clientModule : ModuleManager.INSTANCE.getItemList()) {
             if(clientModule instanceof HudModule hm) {
                 if(hm.dragging) {
@@ -64,7 +99,13 @@ public class HudConfigScreen extends PulseScreen {
     }
 
     @Override
+    public void close() {
+        this.client.setScreen(PulseClient.INSTANCE.windowManager.getItemByClass(MainScreen.class));
+    }
+
+    @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        super.mouseReleased(mouseX, mouseY, button);
         if(button != InputUtil.MOUSE_BUTTON_1) return false;
         for (ClientModule clientModule : ModuleManager.INSTANCE.getItemList()) {
             if(clientModule instanceof HudModule hm) {

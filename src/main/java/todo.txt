@@ -11,4 +11,4 @@ move config to json
 fix box breaker not swapping sometimes
 fix hidden settings not being hidden
 fix discord rpc
-optimize image display
+optimize image display gif mode
