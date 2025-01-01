@@ -4,7 +4,7 @@ Created for playing on `play.dupeanarchy.com` \
 The code quality is dogshit, with some rare exceptions
 where it's even more dogshit (see [ModuleWidget.java](https://github.com/Pulse-Client-Dev/Pulse-Client/blob/master/src/main/java/xyz/qweru/pulse/client/render/ui/gui/widgets/ModuleWidget.java)) \
 Feel free to open pull requests.
-## UI
+## UI (outdated ss)
 ![image 1](./assets/image1.png)
 ![image 2](./assets/image2.png)
 ![image 3](./assets/image3.png)
@@ -14,7 +14,7 @@ Feel free to open pull requests.
 2. Run `./gradlew genSources`
 3. Run `./gradlew build`
 4. Client jar is in `build/libs/pulseclient-???.jar` (not `..-sources.jar`)
-
+Alternatively you can download a prebuilt jar from GitHub actions
 ### Optional dependencies
 * Playerctl (linux only) has to be installed to use the playerctl hud module
 
