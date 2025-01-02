@@ -13,7 +13,7 @@ Feel free to open pull requests.
 1. Clone the repository
 2. Run `./gradlew genSources`
 3. Run `./gradlew build`
-4. Client jar is in `build/libs/pulseclient-???.jar` (not `..-sources.jar`)
+4. Client jar is in `build/libs/pulseclient-???.jar` (not `..-sources.jar`) \
 Alternatively you can download a prebuilt jar from GitHub actions
 ### Optional dependencies
 * Playerctl (linux only) has to be installed to use the playerctl hud module
