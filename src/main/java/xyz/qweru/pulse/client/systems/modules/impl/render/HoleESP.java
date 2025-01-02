@@ -7,15 +7,22 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
+import org.spongepowered.asm.mixin.injection.Inject;
+import xyz.qweru.pulse.client.render.renderer.Pulse2D;
 import xyz.qweru.pulse.client.systems.events.Render3DEvent;
 import xyz.qweru.pulse.client.systems.modules.Category;
 import xyz.qweru.pulse.client.systems.modules.ClientModule;
+import xyz.qweru.pulse.client.systems.modules.settings.builders.ColorSettingBuilder;
 import xyz.qweru.pulse.client.systems.modules.settings.impl.BooleanSetting;
+import xyz.qweru.pulse.client.systems.modules.settings.impl.ColorSetting;
 import xyz.qweru.pulse.client.systems.modules.settings.impl.ModeSetting;
 import xyz.qweru.pulse.client.systems.modules.settings.impl.NumberSetting;
 import xyz.qweru.pulse.client.utils.world.BlockUtil;
+import xyz.qweru.pulse.client.utils.world.HoleUtil;
 
 import java.awt.*;
+
+import static xyz.qweru.pulse.client.PulseClient.mc;
 
 public class HoleESP extends ClientModule {
 
@@ -65,7 +72,7 @@ public class HoleESP extends ClientModule {
             .description("Search range")
             .defaultValue(4)
             .min(0)
-            .max(20)
+            .max(10)
             .shouldShow(true)
             .build();
 
@@ -74,7 +81,7 @@ public class HoleESP extends ClientModule {
             .description("Search range")
             .defaultValue(4)
             .min(0)
-            .max(20)
+            .max(15)
             .shouldShow(true)
             .build();
 
@@ -87,13 +94,50 @@ public class HoleESP extends ClientModule {
             .shouldShow(true)
             .build();
 
+    ColorSetting unbreakable = new ColorSettingBuilder()
+            .setName("Full bedrock color")
+            .setDescription("Color used for full bedrock holes / burrow blocks")
+            .setColor(Color.GREEN)
+            .build();
+
+    ColorSetting mixed = new ColorSettingBuilder()
+            .setName("Mixed color")
+            .setDescription("Color used for mixed holes / burrow blocks")
+            .setColor(Color.ORANGE)
+            .build();
+
+    ColorSetting breakable = new ColorSettingBuilder()
+            .setName("Full obsidian color")
+            .setDescription("Color used for full obsidian holes / burrow blocks")
+            .setColor(Color.RED)
+            .build();
+
+    BooleanSetting showFull = booleanSetting()
+            .name("Render full holes")
+            .description("Should render full bedrock holes")
+            .defaultValue(true)
+            .build();
+
+    BooleanSetting showMixed = booleanSetting()
+            .name("Render full holes")
+            .description("Should render full bedrock holes")
+            .defaultValue(true)
+            .build();
+
+    BooleanSetting showObby = booleanSetting()
+            .name("Render full holes")
+            .description("Should render full bedrock holes")
+            .defaultValue(true)
+            .build();
+
     public HoleESP() {
         builder(this)
                 .name("SafeESP")
                 .description("Renders safe holes / burrow blocks")
                 .category(Category.RENDER)
-                .settings("Holes", renderHoles, holeRenderMode, holeOpacity, holeRange)
-                .settings("Burrow", renderBurrowBlocks, burrowBlockRenderMode, burrowOpacity, burrowRange);
+                .settings("Holes", renderHoles, holeRenderMode, holeOpacity, holeRange, showFull, showMixed, showObby)
+                .settings("Burrow", renderBurrowBlocks, burrowBlockRenderMode, burrowOpacity, burrowRange)
+                .settings("Color", unbreakable, mixed, breakable);
 
         renderHoles.addOnToggle(() -> {
             holeRenderMode.setShouldShow(renderHoles.isEnabled());
@@ -120,10 +164,9 @@ public class HoleESP extends ClientModule {
                 int safetyLevelBelow = safeBlockLevel(pos.subtract(new Vec3i(0, 1, 0)));
                 int opacity = (int) this.burrowOpacity.getValue();
                 if(safetyLevel > 0 && safetyLevelBelow > 0) {
-                    final Color colorFill = safetyLevel + safetyLevelBelow > 3 ? new Color(0, 255, 0, opacity) :
-                            (safetyLevelBelow + safetyLevel == 2 ? new Color(255, 0, 0, opacity) : new Color(255, 255, 0, opacity));
-                    final Color colorEdge = safetyLevel + safetyLevelBelow > 3 ? Color.GREEN.darker() :
-                            (safetyLevelBelow + safetyLevel == 2 ? Color.RED.darker() : Color.YELLOW.darker());
+                    final Color colorFill = safetyLevel + safetyLevelBelow > 3 ? Pulse2D.injectAlpha(unbreakable.getJavaColor(), opacity) :
+                            (safetyLevelBelow + safetyLevel == 2 ? Pulse2D.injectAlpha(breakable.getJavaColor(), opacity) : Pulse2D.injectAlpha(mixed.getJavaColor(), opacity));
+                    final Color colorEdge = Pulse2D.injectAlpha(colorFill.darker(), 255);
                     switch (burrowBlockRenderMode.getCurrent().toLowerCase()) {
                         case "full block" -> {
                             Renderer3d.renderEdged(event.getMatrixStack(),
@@ -142,58 +185,36 @@ public class HoleESP extends ClientModule {
                         }
                     }
                 }
-            }, ((int) holeRange.getValue()));
-
-        }
-
-        // todo: clean up (tf was i smoking when i wrote this)
-        if(renderHoles.isEnabled()) {
-            BlockUtil.forBlocksInRange((x, y, z, pos) -> {
-                int safety = safeBlockLevel(pos);
-
-                if(safety <= 0) return;
-
-                // todo ????
-                // one y level below
-                int bottomSafetyMX = safeBlockLevel(pos.add(-1, -1, 0));
-                int bottomSafetyMZ = safeBlockLevel(pos.add(0, -1, -1));
-                int bottomSafetyPX = safeBlockLevel(pos.add(1, -1, 0));
-                int bottomSafetyPZ = safeBlockLevel(pos.add(0, -1, 1));
-
-                if(!(bottomSafetyPX > 0 || bottomSafetyMX > 0 || bottomSafetyPZ > 0 || bottomSafetyMZ > 0)) return; // no point in checking the rest of the blocks if these aren't safe
-
-                // same y level as block
-                int safetyPXZ = safeBlockLevel(pos.add(1, 0, 1));
-                int safetyMXZ = safeBlockLevel(pos.add(-1, 0, -1));
-                int safetyPXMZ = safeBlockLevel(pos.add(1, 0, -1));
-                int safetyMXPZ = safeBlockLevel(pos.add(-1, 0, 1));
-                int safetyP2X = safeBlockLevel(pos.add(2, 0, 0));
-                int safetyP2Z = safeBlockLevel(pos.add(0, 0, 2));
-                int safetyM2X = safeBlockLevel(pos.add(-2, 0, 0));
-                int safetyM2Z = safeBlockLevel(pos.add(0, 0, -2));
-
-                if(check(safetyMXZ) && check(safetyMXPZ) && check(safetyM2X) && BlockUtil.getBlockAt(pos.add(-1, 0, 0)).equals(Blocks.AIR)) {
-                    drawHoleAt(pos.add(-1, 0, 0), safetyMXZ, safetyMXPZ, safetyM2X, safety, bottomSafetyMX, event.getMatrixStack());
-                }
-
-                if(check(safetyMXZ) && check(safetyM2Z) && check(safetyPXMZ) && BlockUtil.getBlockAt(pos.add(0, 0, -1)).equals(Blocks.AIR)) {
-                    drawHoleAt(pos.add(0, 0, -1), safetyMXZ, safetyM2Z, safetyPXMZ, safety, bottomSafetyMZ, event.getMatrixStack());
-                }
-
-                if(check(safetyPXMZ) && check(safetyP2X) && check(safetyPXZ) && BlockUtil.getBlockAt(pos.add(1, 0, 0)).equals(Blocks.AIR)) {
-                    drawHoleAt(pos.add(1, 0, 0), safetyPXMZ, safetyP2X, safetyPXZ, safety, bottomSafetyPX, event.getMatrixStack());
-                }
-
-                if(check(safetyMXPZ) && check(safetyP2Z) && check(safetyPXZ) && BlockUtil.getBlockAt(pos.add(0, 0, 1)).equals(Blocks.AIR)) {
-                    drawHoleAt(pos.add(0, 0, 1), safetyPXMZ, safetyP2X, safetyPXZ, safety, bottomSafetyPZ, event.getMatrixStack());
-                }
-
             }, ((int) burrowRange.getValue()));
         }
-    }
 
-    boolean check(int c) {
-        return c > 0;
+        if(renderHoles.isEnabled()) {
+            for (HoleUtil.Hole hole : HoleUtil.holes) {
+                if(hole.safety() == HoleUtil.HoleSafety.UNSAFE || Vec3d.of(hole.air().get(0)).distanceTo(mc.player.getPos()) > holeRange.getValue()) continue;
+                Color fill = switch (hole.safety()) {
+                    case UNBREAKABLE -> unbreakable.getJavaColor();
+                    case PARTIALLY_UNBREAKABLE -> mixed.getJavaColor();
+                    case BREAKABLE -> breakable.getJavaColor();
+                    default -> throw new IllegalStateException("Unexpected value: " + hole.safety());
+                };
+
+                for (BlockPos blockPos : hole.air()) {
+                    switch (holeRenderMode.getCurrent().toLowerCase()) {
+                        case "full block" -> Renderer3d.renderEdged(event.getMatrixStack(),
+                                fill,
+                                Pulse2D.injectAlpha(fill.darker(), 255),
+                                new Vec3d(blockPos.getX(), blockPos.getY(), blockPos.getZ()),
+                                new Vec3d(1, 1, 1)
+                        );
+                        case "block face" -> Renderer3d.renderEdged(event.getMatrixStack(),
+                                fill,
+                                Pulse2D.injectAlpha(fill.darker(), 255),
+                                new Vec3d(blockPos.getX(), blockPos.getY(), blockPos.getZ()),
+                                new Vec3d(1, 0.01, 1));
+                    }
+                }
+            }
+        }
     }
 
     void drawHoleAt(BlockPos pos, int safetyLevel, MatrixStack stack) {
@@ -204,30 +225,18 @@ public class HoleESP extends ClientModule {
         final Color colorEdge = safetyLevel == 3 ? Color.GREEN.darker() :
                 (safetyLevel <= 1 ? Color.RED.darker() : Color.YELLOW.darker());
         switch (holeRenderMode.getCurrent().toLowerCase()) {
-            case "full block" -> {
-                Renderer3d.renderEdged(stack,
-                        colorFill,
-                        colorEdge,
-                        new Vec3d(pos.getX(), pos.getY(), pos.getZ()),
-                        new Vec3d(1, 1, 1)
-                );
-            }
-            case "block face" -> {
-                Renderer3d.renderEdged(stack,
-                        colorFill,
-                        colorEdge,
-                        new Vec3d(pos.getX(), pos.toBottomCenterPos().getY(), pos.getZ()),
-                        new Vec3d(1, 0.01, 1));
-
-            }
+            case "full block" -> Renderer3d.renderEdged(stack,
+                    colorFill,
+                    colorEdge,
+                    new Vec3d(pos.getX(), pos.getY(), pos.getZ()),
+                    new Vec3d(1, 1, 1)
+            );
+            case "block face" -> Renderer3d.renderEdged(stack,
+                    colorFill,
+                    colorEdge,
+                    new Vec3d(pos.getX(), pos.toBottomCenterPos().getY(), pos.getZ()),
+                    new Vec3d(1, 0.01, 1));
         }
-    }
-
-    void drawHoleAt(BlockPos pos, int safe1, int safe2, int safe3, int safe4, int safe5, MatrixStack stack) {
-        int safeGlobal = (safe1 == 2 && safe2 == 2 && safe3 == 2 && safe4 == 2 && safe5 == 2 ? 3 : (
-                    safe1 > 1 || safe2 > 1 || safe3 > 1 || safe4 > 1 || safe5 > 1 ? 2 : 1
-                ));
-        drawHoleAt(pos, safeGlobal, stack);
     }
 
 }

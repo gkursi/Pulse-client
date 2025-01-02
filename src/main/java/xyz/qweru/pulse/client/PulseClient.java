@@ -38,6 +38,7 @@ import xyz.qweru.pulse.client.utils.player.RotationUtil;
 import xyz.qweru.pulse.client.utils.render.RenderUtil;
 import xyz.qweru.pulse.client.utils.thread.ThreadManager;
 import xyz.qweru.pulse.client.utils.timer.TimerUtil;
+import xyz.qweru.pulse.client.utils.world.HoleUtil;
 
 import java.awt.*;
 import java.lang.invoke.MethodHandles;
@@ -181,6 +182,7 @@ public class PulseClient implements ModInitializer {
 		Managers.VARIABLE.update();
 		Managers.SLOT.tick();
 //		RotationUtil.tick();
+		HoleUtil.tick();
 	}
 
 	@EventHandler

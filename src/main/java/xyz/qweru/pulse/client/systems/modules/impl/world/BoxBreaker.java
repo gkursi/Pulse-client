@@ -27,7 +27,9 @@ import xyz.qweru.pulse.client.systems.events.Render3DEvent;
 import xyz.qweru.pulse.client.systems.events.WorldTickEvent;
 import xyz.qweru.pulse.client.systems.modules.Category;
 import xyz.qweru.pulse.client.systems.modules.ClientModule;
+import xyz.qweru.pulse.client.systems.modules.settings.builders.ColorSettingBuilder;
 import xyz.qweru.pulse.client.systems.modules.settings.impl.BooleanSetting;
+import xyz.qweru.pulse.client.systems.modules.settings.impl.ColorSetting;
 import xyz.qweru.pulse.client.systems.modules.settings.impl.ModeSetting;
 import xyz.qweru.pulse.client.systems.modules.settings.impl.NumberSetting;
 import xyz.qweru.pulse.client.utils.InputUtil;
@@ -51,7 +53,8 @@ public class BoxBreaker extends ClientModule {
     public BoxBreaker() {
         super("Box Breaker", "Automatically break enemy player boxes", InputUtil.KEY_UNKNOWN, Category.WORLD);
         builder(this).settings(range, render, swap, onlyVisible, instaMine, imIgnoreBurrow)
-                .settings("Crystal check", doCrystalCheck, crystalCheck, ccIgnoreBurrow);
+                .settings("Crystal check", doCrystalCheck, crystalCheck, ccIgnoreBurrow)
+                .settings("Color", miningFill, miningOutline, finishedFill, finishedOutline);
     }
 
     NumberSetting range = new NumberSetting("Range", "range", 0, 6, 4, true);
@@ -71,6 +74,28 @@ public class BoxBreaker extends ClientModule {
             .mode("either")
             .build();
     BooleanSetting ccIgnoreBurrow = new BooleanSetting("Ignore burrow", "Ignores burrow block for crystal check", true, true);
+
+    ColorSetting miningFill = new ColorSettingBuilder()
+            .setName("Mining Fill")
+            .setDescription("Fill color while mining")
+            .setColor(new Color(235, 48, 53, 120))
+            .build();
+    ColorSetting miningOutline = new ColorSettingBuilder()
+            .setName("Mining Outline")
+            .setDescription("Outline color while mining")
+            .setColor(new Color(235, 48, 53, 120).darker())
+            .build();
+
+    ColorSetting finishedFill = new ColorSettingBuilder()
+            .setName("Finished Fill")
+            .setDescription("Fill color when finished")
+            .setColor(new Color(110, 193, 117, 120))
+            .build();
+    ColorSetting finishedOutline = new ColorSettingBuilder()
+            .setName("Finished Outline")
+            .setDescription("Outline color when finished")
+            .setColor(new Color(110, 193, 117, 120).darker())
+            .build();
 
     @Override
     public void enable() {
@@ -166,13 +191,14 @@ public class BoxBreaker extends ClientModule {
 
     @EventHandler
     private void onRender(Render3DEvent event) {
+        if(!render.isEnabled()) return;
         Pulse3D.renderThroughWalls();
         blocks.forEach(block -> block.render(event.getMatrixStack()));
         Pulse3D.stopRenderThroughWalls();
     }
 
     // skidded from meteor
-    public static class MyBlock {
+    public class MyBlock {
         public BlockPos blockPos;
         public BlockState blockState;
         public Block block;
@@ -253,14 +279,14 @@ public class BoxBreaker extends ClientModule {
 
         void render(MatrixStack matrices) {
             if(progress >= 1) {
-                Pulse3D.renderEdged(matrices, new Color(110, 193, 117, 120), new Color(110, 193, 117, 120).darker(), Vec3d.of(blockPos), new Vec3d(1, 1, 1));
+                Pulse3D.renderEdged(matrices, finishedFill.getJavaColor(), finishedOutline.getJavaColor(), Vec3d.of(blockPos), new Vec3d(1, 1, 1));
             } else {
                 double renderSize = AnimationUtil.easeOutCirc(MathHelper.clamp(progress, 0, 1));
                 double renderProg = 0.5 - (renderSize) / 2;
 
                 Vec3d init = Vec3d.of(blockPos).add(renderProg, renderProg, renderProg);
                 Vec3d size = new Vec3d(renderSize, renderSize, renderSize);
-                Pulse3D.renderEdged(matrices, new Color(235, 48, 53, 120), new Color(235, 48, 53, 120).darker(), init, size);
+                Pulse3D.renderEdged(matrices, miningFill.getJavaColor(), miningOutline.getJavaColor(), init, size);
             }
         }
     }

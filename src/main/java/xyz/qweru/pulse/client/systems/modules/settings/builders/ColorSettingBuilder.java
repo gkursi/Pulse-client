@@ -2,6 +2,8 @@ package xyz.qweru.pulse.client.systems.modules.settings.builders;
 
 import xyz.qweru.pulse.client.systems.modules.settings.impl.ColorSetting;
 
+import java.awt.*;
+
 public class ColorSettingBuilder {
     private String name;
     private String description;
@@ -43,6 +45,14 @@ public class ColorSettingBuilder {
 
     public ColorSettingBuilder setAlpha(int alpha) {
         this.alpha = alpha;
+        return this;
+    }
+
+    public ColorSettingBuilder setColor(Color color) {
+        this.alpha = color.getAlpha();
+        this.red = color.getRed();
+        this.green = color.getGreen();
+        this.blue = color.getBlue();
         return this;
     }
 
