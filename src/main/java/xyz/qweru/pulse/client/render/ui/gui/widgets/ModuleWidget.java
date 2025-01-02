@@ -90,7 +90,7 @@ public class ModuleWidget extends Widget {
 
         RenderUtil.textRenderer.drawColoredString(context.matrixStack(), string, x + 2 + 2, y + RenderUtil.fontOffsetY);
         if(searchAccessor != null && !searchAccessor.getValue().isBlank() && module.getName().toLowerCase().contains(searchAccessor.getValue().toLowerCase())) {
-            Pulse2D.drawRound(context.matrixStack(), x + 3 , y + RenderUtil.fontOffsetY + string.getHeight() + 2, string.getWidth() + 1, 0.7f, 1, context.colorScheme().TEXT());
+            Pulse2D.drawRound(context.matrixStack(), x + 4 , y + RenderUtil.fontOffsetY + string.getHeight() + 1.5f, string.getWidth(), 0.7f, 1, context.colorScheme().TEXT());
         }
         if(hovered) {
             RenderUtil.textRenderer.drawString(context.matrixStack(), module.getDescription(), 2, context.screenHeight() - 2 - RenderUtil.textRenderer.getStringHeight(module.getDescription(), false), context.colorScheme().TEXT().getRGB());

@@ -29,7 +29,7 @@ public class CategoryBackgroundWidget extends Widget {
 
         Pulse2D.drawRound(context.matrixStack(), x, y, w, h, cornerRad, bColor);
         Pulse2D.drawRound(context.matrixStack(), x + borderWidth, y + borderWidth,
-                w - borderWidth * 2, h - borderWidth  * 2, cornerRad, altColor ? color : context.colorScheme().PRIMARY());
+                w - borderWidth * 2, h - borderWidth  * 2, cornerRad, Pulse2D.injectAlpha(altColor ? color : context.colorScheme().PRIMARY(), ClickGUI.backgroundOpacity.getValueInt()));
 
     }
 

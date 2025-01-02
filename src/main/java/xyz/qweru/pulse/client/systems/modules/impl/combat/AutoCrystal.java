@@ -414,7 +414,7 @@ public class AutoCrystal extends ClientModule {
         if(!mc.world.canPlace(mc.world.getBlockState(BlockPos.ofFloored(pos)), BlockPos.ofFloored(pos), ShapeContext.absent()) && pos.getY() < 320 /* so crystals can be placed above height limit */) return false;
         return (BlockUtil.getBlockAt(BlockPos.ofFloored(pos)).equals(Blocks.OBSIDIAN) || BlockUtil.getBlockAt(BlockPos.ofFloored(pos)).equals(Blocks.BEDROCK))
                 && (BlockUtil.getBlockAt(BlockPos.ofFloored(pos.add(0, 1, 0))).equals(Blocks.AIR)
-                    || (prePlace.isEnabled() && InstantBreak.isBreaking(BlockPos.ofFloored(pos.add(0, 1, 0)))));
+                    /*|| (prePlace.isEnabled() && InstantBreak.isBreaking(BlockPos.ofFloored(pos.add(0, 1, 0))))*/);
     }
 
     void run() {

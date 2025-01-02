@@ -56,7 +56,8 @@ dependencies {
 	lib 'org.reflections:reflections:0.10.2'
 	implementation group: 'com.personthecat', name: 'fastnoise', version: '0.10'
 	implementation 'se.michaelthelin.spotify:spotify-web-api-java:8.4.1'
-
+	include modImplementation(files("libs/litematica-fabric-1.21-0.19.54.jar"))
+	include modImplementation(files("libs/malilib-fabric-1.21-0.21.6.jar"))
 //	include modImplementation(files("./libs/baritone-api-fabric-1.10.2-9-g9eefcbc9.jar"))
 
 	//litematica

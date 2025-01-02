@@ -87,7 +87,7 @@ public class ESP extends ClientModule {
                 .description("Show entities trough walls")
                 .settings(mode)
                 .settings("Render", expand, color)
-                .settings("Target", onlyLiving, ignoreDead, players, passive, mobs)
+                .settings("Target", onlyLiving, ignoreDead, players, passive, mobs, misc)
                 .category(Category.RENDER);
     }
 

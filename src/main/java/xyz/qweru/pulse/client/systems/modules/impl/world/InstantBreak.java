@@ -1,6 +1,7 @@
 package xyz.qweru.pulse.client.systems.modules.impl.world;
 
 import meteordevelopment.orbit.EventHandler;
+import net.minecraft.block.Blocks;
 import net.minecraft.item.PickaxeItem;
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
 import net.minecraft.util.math.BlockPos;
@@ -31,7 +32,7 @@ public class InstantBreak extends ClientModule {
         builder(this)
                 .name("Instant break")
                 .description("Instantly break blocks after mining once")
-                .settings(range, delay)
+                .settings(range, delay, dontMineAnchors)
                 .category(Category.WORLD);
     }
 
@@ -49,6 +50,11 @@ public class InstantBreak extends ClientModule {
             .range(0, 10f)
             .defaultValue(1)
             .stepFullNumbers()
+            .build();
+
+    BooleanSetting dontMineAnchors = booleanSetting()
+            .name("Dont mine anchors")
+            .description("Doesnt instamine respawn anchors")
             .build();
 
     @EventHandler
@@ -89,7 +95,7 @@ public class InstantBreak extends ClientModule {
     }
 
     public boolean shouldMine() {
-        return !mc.world.isOutOfHeightLimit(pos) && BlockUtil.isPosBreakable(pos);
+        return !mc.world.isOutOfHeightLimit(pos) && BlockUtil.isPosBreakable(pos) && !(dontMineAnchors.isEnabled() && BlockUtil.getBlockAt(pos).equals(Blocks.RESPAWN_ANCHOR));
     }
 
     public static boolean isBreaking(BlockPos pos) {
