@@ -3,11 +3,11 @@ package xyz.qweru.pulse.client.systems.events;
 import meteordevelopment.orbit.ICancellable;
 import net.minecraft.network.packet.Packet;
 
-public class SendPacketEvent implements ICancellable {
+public class PostSendPacketEvent implements ICancellable {
     private boolean cancelled = false;
     private Packet<?> packet;
 
-    public SendPacketEvent(Packet<?> packet) {
+    public PostSendPacketEvent(Packet<?> packet) {
         this.packet = packet;
     }
 

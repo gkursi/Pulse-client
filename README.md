@@ -30,7 +30,7 @@ Alternatively you can download a prebuilt jar from GitHub actions
 * discord rpc - https://github.com/JnCrMx/discord-game-sdk4j
 * 3d renderer - https://github.com/0x3C50/Renderer
 * part of 2d renderer - https://github.com/Pan4ur/ThunderHack-Recode
-* damage utils - https://github.com/MeteorDevelopment/meteor-client/
+* damage utils, rotations, some mining related stuff, broken ms auth - https://github.com/MeteorDevelopment/meteor-client/
 * misc. utils - Lumina Client premium
 * font renderer - no idea but it's not mine
 ### People

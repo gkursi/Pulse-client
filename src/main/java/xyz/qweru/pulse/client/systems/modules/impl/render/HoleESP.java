@@ -113,19 +113,19 @@ public class HoleESP extends ClientModule {
             .build();
 
     BooleanSetting showFull = booleanSetting()
-            .name("Render full holes")
+            .name("Render bedrock holes")
             .description("Should render full bedrock holes")
             .defaultValue(true)
             .build();
 
     BooleanSetting showMixed = booleanSetting()
-            .name("Render full holes")
+            .name("Render mixes holes")
             .description("Should render full bedrock holes")
             .defaultValue(true)
             .build();
 
     BooleanSetting showObby = booleanSetting()
-            .name("Render full holes")
+            .name("Render obsidian holes")
             .description("Should render full bedrock holes")
             .defaultValue(true)
             .build();

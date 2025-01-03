@@ -6,7 +6,7 @@ import net.minecraft.network.packet.c2s.common.KeepAliveC2SPacket;
 import net.minecraft.util.math.Vec3d;
 import xyz.qweru.pulse.client.mixin.iinterface.ICamera;
 import xyz.qweru.pulse.client.systems.events.Render3DEvent;
-import xyz.qweru.pulse.client.systems.events.SendPacketEvent;
+import xyz.qweru.pulse.client.systems.events.PreSendPacketEvent;
 import xyz.qweru.pulse.client.systems.events.WorldTickEvent;
 import xyz.qweru.pulse.client.systems.modules.Category;
 import xyz.qweru.pulse.client.systems.modules.ClientModule;
@@ -97,7 +97,7 @@ public class FreeCam extends ClientModule {
     }
 
     @EventHandler
-    void packetEvent(SendPacketEvent e) {
+    void packetEvent(PreSendPacketEvent e) {
         if (this.isEnabled() && !(e.getPacket() instanceof KeepAliveC2SPacket || e.getPacket() instanceof CommonPongC2SPacket)) {
             e.cancel();
         }

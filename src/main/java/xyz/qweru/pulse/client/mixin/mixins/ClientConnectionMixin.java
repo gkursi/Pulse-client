@@ -15,7 +15,8 @@ import xyz.qweru.pulse.client.PulseClient;
 import xyz.qweru.pulse.client.managers.impl.ModuleManager;
 import xyz.qweru.pulse.client.mixin.iinterface.IClientConnection;
 import xyz.qweru.pulse.client.systems.events.HandlePacketEvent;
-import xyz.qweru.pulse.client.systems.events.SendPacketEvent;
+import xyz.qweru.pulse.client.systems.events.PostSendPacketEvent;
+import xyz.qweru.pulse.client.systems.events.PreSendPacketEvent;
 import xyz.qweru.pulse.client.systems.modules.impl.movement.LiveOverflow;
 
 import static xyz.qweru.pulse.client.PulseClient.Events;
@@ -52,6 +53,11 @@ public abstract class ClientConnectionMixin implements IClientConnection {
 
     @Inject(method = "sendImmediately", at = @At("HEAD"), cancellable = true)
     void sp(Packet<?> packet, @Nullable PacketCallbacks callbacks, boolean flush, CallbackInfo ci) {
-        if(Events.post(new SendPacketEvent(packet)).isCancelled()) ci.cancel();
+        if(Events.post(new PreSendPacketEvent(packet)).isCancelled()) ci.cancel();
+    }
+
+    @Inject(method = "sendImmediately", at = @At("TAIL"), cancellable = true)
+    void spPost(Packet<?> packet, @Nullable PacketCallbacks callbacks, boolean flush, CallbackInfo ci) {
+        if(Events.post(new PostSendPacketEvent(packet)).isCancelled()) ci.cancel();
     }
 }

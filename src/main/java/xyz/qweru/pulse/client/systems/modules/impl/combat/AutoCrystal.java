@@ -40,6 +40,7 @@ import xyz.qweru.pulse.client.utils.entity.EntityFinder;
 import xyz.qweru.pulse.client.utils.player.ChatUtil;
 import xyz.qweru.pulse.client.utils.player.InventoryUtils;
 import xyz.qweru.pulse.client.utils.player.RotationUtil;
+import xyz.qweru.pulse.client.utils.player.Rotations;
 import xyz.qweru.pulse.client.utils.thread.ThreadManager;
 import xyz.qweru.pulse.client.utils.world.BlockUtil;
 import xyz.qweru.pulse.client.utils.world.PacketUtil;
@@ -478,7 +479,11 @@ public class AutoCrystal extends ClientModule {
     void exec(CompletableEndCrystalData crystalData) {
         if(pauseOnSurrond.isEnabled() && Surround.placing) return;
         if(rotate.isEnabled()) {
-            RotationUtil.override(crystalData.pos.add(0, 0.5, 0), true);
+            Rotations.rotate(
+                    Rotations.getYaw(crystalData.pos.add(0, 0.5, 0)),
+                    Rotations.getPitch(crystalData.pos.add(0, 0.5, 0)),
+                    100
+            );
         }
         int slot = InventoryUtils.getItemSlotAll(Items.END_CRYSTAL);
         boolean offhand = mc.player.getOffHandStack().getItem().equals(Items.END_CRYSTAL);

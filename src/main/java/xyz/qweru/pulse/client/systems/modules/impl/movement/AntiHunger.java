@@ -5,7 +5,7 @@ import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import xyz.qweru.pulse.client.mixin.iinterface.IPlayerMoveC2SPacket;
-import xyz.qweru.pulse.client.systems.events.SendPacketEvent;
+import xyz.qweru.pulse.client.systems.events.PreSendPacketEvent;
 import xyz.qweru.pulse.client.systems.modules.Category;
 import xyz.qweru.pulse.client.systems.modules.ClientModule;
 import xyz.qweru.pulse.client.systems.modules.settings.impl.BooleanSetting;
@@ -35,7 +35,7 @@ public class AntiHunger extends ClientModule {
     }
 
     @EventHandler
-    void p2S(SendPacketEvent event) {
+    void p2S(PreSendPacketEvent event) {
         if(Util.nullCheck()) return;
         Packet<?> p = event.getPacket();
 

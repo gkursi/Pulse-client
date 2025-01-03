@@ -2,7 +2,7 @@ package xyz.qweru.pulse.client.systems.modules.impl.world;
 
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.network.packet.c2s.play.AcknowledgeChunksC2SPacket;
-import xyz.qweru.pulse.client.systems.events.SendPacketEvent;
+import xyz.qweru.pulse.client.systems.events.PreSendPacketEvent;
 import xyz.qweru.pulse.client.systems.modules.Category;
 import xyz.qweru.pulse.client.systems.modules.ClientModule;
 import xyz.qweru.pulse.client.utils.annotations.ExcludeModule;
@@ -17,7 +17,7 @@ public class NoChunkLoad extends ClientModule {
     }
 
     @EventHandler
-    void sendPacket(SendPacketEvent e) {
+    void sendPacket(PreSendPacketEvent e) {
         if(e.getPacket() instanceof AcknowledgeChunksC2SPacket) e.setCancelled(true);
     }
 }

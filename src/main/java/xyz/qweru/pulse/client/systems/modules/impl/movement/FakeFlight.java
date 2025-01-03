@@ -9,7 +9,7 @@ import xyz.qweru.pulse.client.render.renderer.Pulse2D;
 import xyz.qweru.pulse.client.render.renderer.Pulse3D;
 import xyz.qweru.pulse.client.render.ui.color.ThemeInfo;
 import xyz.qweru.pulse.client.systems.events.Render3DEvent;
-import xyz.qweru.pulse.client.systems.events.SendPacketEvent;
+import xyz.qweru.pulse.client.systems.events.PreSendPacketEvent;
 import xyz.qweru.pulse.client.systems.modules.Category;
 import xyz.qweru.pulse.client.utils.annotations.ExcludeModule;
 import xyz.qweru.pulse.client.utils.Util;
@@ -34,7 +34,7 @@ public class FakeFlight extends Flight {
     BlockPos lastPos = null;
 
     @EventHandler
-    void packetSentEvent(SendPacketEvent e) {
+    void packetSentEvent(PreSendPacketEvent e) {
         if(e.getPacket() instanceof PlayerMoveC2SPacket moveC2SPacket ) {
             Vec3d pos = new Vec3d(moveC2SPacket.getX(mc.player.getX()), moveC2SPacket.getY(mc.player.getY()), moveC2SPacket.getZ(mc.player.getZ()));
             Vec3d newPos = pos;

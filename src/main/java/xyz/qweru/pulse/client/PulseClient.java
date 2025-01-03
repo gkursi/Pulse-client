@@ -35,6 +35,7 @@ import xyz.qweru.pulse.client.utils.QueueUtil;
 import xyz.qweru.pulse.client.utils.Util;
 import xyz.qweru.pulse.client.utils.player.ChatUtil;
 import xyz.qweru.pulse.client.utils.player.RotationUtil;
+import xyz.qweru.pulse.client.utils.player.Rotations;
 import xyz.qweru.pulse.client.utils.render.RenderUtil;
 import xyz.qweru.pulse.client.utils.thread.ThreadManager;
 import xyz.qweru.pulse.client.utils.timer.TimerUtil;
@@ -97,6 +98,7 @@ public class PulseClient implements ModInitializer {
 		Events.subscribe(this);
 		PulseClient.Events.subscribe(ModuleManager.INSTANCE);
 		Managers.BLOCK.init();
+		Rotations.init();
 		logger.debug("Loaded events");
 
 		new Thread(styleConfigManager::load).start();
@@ -191,7 +193,7 @@ public class PulseClient implements ModInitializer {
 	}
 
 	@EventHandler
-	void packet2S(SendPacketEvent e) {
+	void packet2S(PreSendPacketEvent e) {
 		if(e.getPacket() instanceof UpdateSelectedSlotC2SPacket p) Managers.SLOT.update(p);
 		if(e.getPacket() instanceof PlayerMoveC2SPacket mp &&
 				(mp.getYaw(mc.player.getYaw()) != RotationUtil.keepYaw || mp.getPitch(mc.player.getPitch()) != RotationUtil.keepPitch)

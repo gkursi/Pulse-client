@@ -14,7 +14,7 @@ import xyz.qweru.pulse.client.render.ui.color.ThemeInfo;
 import xyz.qweru.pulse.client.render.world.PulseBlock;
 import xyz.qweru.pulse.client.render.world.blocks.FadeOutBlock;
 import xyz.qweru.pulse.client.systems.events.Render3DEvent;
-import xyz.qweru.pulse.client.systems.events.SendPacketEvent;
+import xyz.qweru.pulse.client.systems.events.PreSendPacketEvent;
 import xyz.qweru.pulse.client.systems.events.WorldTickEvent;
 import xyz.qweru.pulse.client.systems.modules.Category;
 import xyz.qweru.pulse.client.systems.modules.ClientModule;
@@ -23,6 +23,7 @@ import xyz.qweru.pulse.client.systems.modules.settings.impl.NumberSetting;
 import xyz.qweru.pulse.client.utils.Util;
 import xyz.qweru.pulse.client.utils.player.PlayerUtil;
 import xyz.qweru.pulse.client.utils.player.RotationUtil;
+import xyz.qweru.pulse.client.utils.player.Rotations;
 import xyz.qweru.pulse.client.utils.player.SlotUtil;
 import xyz.qweru.pulse.client.utils.thread.ThreadManager;
 import xyz.qweru.pulse.client.utils.world.BlockUtil;
@@ -229,10 +230,13 @@ public class Surround extends ClientModule {
                         if(!BlockUtil.isPosReplaceable(place)) continue;
                         curPos = new Vec3d(place.getX(), place.getY(), place.getZ());
                         if(rotate.isEnabled()) {
-                            RotationUtil.override(place.toCenterPos(), true);
+                            Rotations.rotate(Rotations.getYaw(place.toCenterPos()), Rotations.getPitch(place.toCenterPos()), 10000, () -> {
+                                PlayerUtil.placeBlock(new BlockHitResult(curPos, Direction.DOWN, place, false));
+                            });
+                        } else {
+                            Util.sleep(((long) delay.getValue()));
+                            PlayerUtil.placeBlock(new BlockHitResult(curPos, Direction.DOWN, place, false));
                         }
-                        Util.sleep(((long) delay.getValue()));
-                        PlayerUtil.placeBlock(new BlockHitResult(curPos, Direction.DOWN, place, false));
                         i++;
                     }
                     placing = false;
@@ -307,7 +311,7 @@ public class Surround extends ClientModule {
     }
 
     @EventHandler
-    void move(SendPacketEvent e) {
+    void move(PreSendPacketEvent e) {
         if(!(e.getPacket() instanceof PlayerMoveC2SPacket pm) || !pm.changesPosition()) return;
         Vec3d newPos = new Vec3d(pm.getX(mc.player.getX()), pm.getY(mc.player.getY()), pm.getZ(mc.player.getZ()));
         if(mc.player.getPos().distanceTo(newPos) > 1 && toggleOnMove.isEnabled()) {
