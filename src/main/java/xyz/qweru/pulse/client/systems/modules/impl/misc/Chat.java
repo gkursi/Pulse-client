@@ -8,7 +8,8 @@ import xyz.qweru.pulse.client.systems.modules.settings.impl.TextSetting;
 
 public class Chat extends ClientModule {
 
-    public static TextSetting suffix = new TextSetting("Suffix text", "Will be appended to all chat", " ⎥ ｅｕｐｈｏｒｉｘ", true);
+    public static TextSetting prefix = new TextSetting("Prefix text", "prefix text", "-# ", true);
+    public static TextSetting suffix = new TextSetting("Suffix text", "Will be appended to all chat", " ⎥ pulse on top!", true);
     public static BooleanSetting fancyChat = new BooleanSettingBuilder()
             .name("Fancy chat")
             .description("Replaces your chars with ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴩqʀꜱᴛᴜᴠᴡxyᴢ")
@@ -43,11 +44,9 @@ public class Chat extends ClientModule {
 
     public Chat() {
         super("Chat", "Chat options", -1, Category.MISC);
-        builder(this).settings(suffix, fancyChat, onlySuffix, timestamps, font, slideIn, noBG);
+        builder(this).settings(suffix, prefix,fancyChat, onlySuffix, timestamps, font, slideIn, noBG);
 
-        fancyChat.addOnToggle(() -> {
-            onlySuffix.setShouldShow(fancyChat.isEnabled());
-        });
+        fancyChat.addOnToggle(() -> onlySuffix.setShouldShow(fancyChat.isEnabled()));
     }
 
 

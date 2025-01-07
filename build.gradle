@@ -17,10 +17,6 @@ repositories {
 		url = "https://maven.meteordev.org/releases"
 	}
 	mavenLocal()
-	maven {
-		name 'Gegy'
-		url 'https://maven.gegy.dev'
-	}
 	mavenCentral()
 	maven {
 		name = 'Ladysnake Mods'
@@ -48,24 +44,14 @@ dependencies {
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
 	lib "meteordevelopment:orbit:0.2.3"
-	lib 'com.github.JnCrMx:discord-game-sdk4j:v0.5.5'
 	modImplementation "org.ladysnake:satin:${satin_version}"
-	// Include Satin as a Jar-in-Jar dependency (optional)
+	implementation 'com.github.JnCrMx:discord-game-sdk4j:v0.5.5'
 	include "org.ladysnake:satin:${satin_version}"
 	include modImplementation("io.github.0x3c50.renderer:renderer-fabric:1.2.1")
 	lib 'org.reflections:reflections:0.10.2'
 	implementation group: 'com.personthecat', name: 'fastnoise', version: '0.10'
-	implementation 'se.michaelthelin.spotify:spotify-web-api-java:8.4.1'
 	include modImplementation(files("libs/litematica-fabric-1.21-0.19.54.jar"))
 	include modImplementation(files("libs/malilib-fabric-1.21-0.21.6.jar"))
-//	include modImplementation(files("./libs/baritone-api-fabric-1.10.2-9-g9eefcbc9.jar"))
-
-	//litematica
-	//modImplementation "curse.maven:litematica-${project.litematica_projectid}:${project.litematica_fileid}"
-//	modImplementation 'com.github.sakura-ryoko:litematica:1.21-sakura.23'
-//	//modImplementation "fi.dy.masa.malilib:malilib-fabric-${project.minecraft_version}:${project.malilib_version}"
-//	modImplementation 'com.github.sakura-ryoko:malilib:1.21-sakura.8'
-
 }
 
 base {

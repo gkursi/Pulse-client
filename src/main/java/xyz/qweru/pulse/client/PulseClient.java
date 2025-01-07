@@ -119,6 +119,7 @@ public class PulseClient implements ModInitializer {
 			styleConfigManager.save();
 			friendSystem.shutdown();
 			rageSystem.shutdown();
+			RPC.shutdown();
 			ThreadManager.stopAll();
 		}));
 
@@ -134,20 +135,7 @@ public class PulseClient implements ModInitializer {
 		RenderUtil.initFont();
 		logger.debug("Loaded visuals");
 
-		ThreadManager.fixedPool.submit(RPC::thread_rpc);
-//		ThreadManager.fixedPool.submit(SpotifyIntegration::init);
-
-//		((ISession) mc.getSession()).pulse$setUsername("PulseUser69");
-
-//		QueueUtil.onWorldLoad(() -> {
-//			Util.sleep(4000);
-//			ChatUtil.sendLocalMsg(
-//					Text.empty()
-//							.append(Text.of("Welcome, "))
-//							.append(Text.empty().append(mc.player.getGameProfile().getName()).formatted(Formatting.GOLD))
-//							.append(Text.empty().append("!"))
-//			);
-//		});
+		ThreadManager.fixedPool.submit(RPC::init);
 
 		LOGGER.info("Loaded {} {} by {}", NAME, VERSION, AUTHOR);
 		globTimer.reset();

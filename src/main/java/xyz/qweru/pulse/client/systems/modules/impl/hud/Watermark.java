@@ -16,11 +16,6 @@ import static xyz.qweru.pulse.client.PulseClient.mc;
 
 public class Watermark extends HudModule {
 
-    BooleanSetting showUsername = booleanSetting()
-            .description("Show your username")
-            .name("Show username")
-            .build();
-
     BooleanSetting showAuthor = booleanSetting()
             .description("Show the client author")
             .name("Show author")

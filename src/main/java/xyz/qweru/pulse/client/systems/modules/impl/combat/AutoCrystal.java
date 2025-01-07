@@ -356,7 +356,7 @@ public class AutoCrystal extends ClientModule {
                     float selfDamage = DamageUtils.crystalDamage(mc.player, bp.add(0, 1, 0).toCenterPos());
                     if(extrapolateSelf.isEnabled()) mc.player.setPos(pos.getX(), pos.getY(), pos.getZ());
                     double distance = PosUtil.distanceBetween(bp.add(0, 1, 0).toBottomCenterPos(), entity.getPos());
-                    possiblePlacements.add(new CompletableEndCrystalData(bp.toCenterPos(), distance, damage, selfDamage, entity.getPos()));
+                    possiblePlacements.add(new CompletableEndCrystalData(bp.toCenterPos(), distance, damage, selfDamage, entity.getPos(), (entity instanceof PlayerEntity p ? p.getGameProfile().getName() : Util.orderedTextToString(entity.getDisplayName().asOrderedText()))));
                     if(spoofInstamineBlock) {
                         mc.world.setBlockState(spoofPos, prev);
                     }
@@ -473,6 +473,15 @@ public class AutoCrystal extends ClientModule {
             }
         }
         usingCrystals = false;
+    }
+
+    String lastTarget = "";
+    int lastT = 0;
+    @Override
+    public String getState() {
+        if(lastT <= 0) lastTarget = "";
+        else lastT--;
+        return lastTarget == "" ? "" : "Targeting " + lastTarget;
     }
 
     Entity lastEntity = null;
@@ -631,14 +640,5 @@ public class AutoCrystal extends ClientModule {
         return targetPos == null ? "" : targetPos.toString();
     }
 
-    record EndCrystalData(EndCrystalEntity entity, Vec3d pos, Double distanceToTarget, Float damageToTarget, Float damageToSelf, Vec3d targetPos) {
-        public CompletableEndCrystalData getCompletable() {
-            return new CompletableEndCrystalData(pos, distanceToTarget, damageToTarget, damageToSelf, targetPos);
-        }
-    }
-    record CompletableEndCrystalData(Vec3d pos, Double distanceToTarget, Float damageToTarget, Float damageToSelf, Vec3d targetPos) {
-        public EndCrystalData complete(EndCrystalEntity entity) {
-            return new EndCrystalData(entity, pos(), distanceToTarget(), damageToTarget(), damageToSelf(), targetPos);
-        }
-    }
+    record CompletableEndCrystalData(Vec3d pos, Double distanceToTarget, Float damageToTarget, Float damageToSelf, Vec3d targetPos, String targetName) {}
 }

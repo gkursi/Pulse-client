@@ -15,15 +15,12 @@ import xyz.qweru.pulse.client.systems.modules.impl.movement.Velocity;
 import xyz.qweru.pulse.client.systems.modules.impl.render.NoRender;
 import xyz.qweru.pulse.client.systems.modules.impl.render.ViewModel;
 
-import static xyz.qweru.pulse.client.systems.modules.impl.movement.Velocity.mode;
-import static xyz.qweru.pulse.client.systems.modules.impl.movement.Velocity.removeTimer;
-
 @Mixin(LivingEntity.class)
 public class LivingEntityMixin {
 
     @Inject(method = "takeKnockback", at = @At("HEAD"), cancellable = true)
     void takeKB(double strength, double x, double z, CallbackInfo ci) {
-        if(ModuleManager.INSTANCE.getItemByClass(Velocity.class).isEnabled()) {
+        if(ModuleManager.INSTANCE.getItemByClass(Velocity.class).isEnabled() && !(Velocity.mode.is("vulcan") && !Velocity.removeKB)) {
             ci.cancel();
         }
     }

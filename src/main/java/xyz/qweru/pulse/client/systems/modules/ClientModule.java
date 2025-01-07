@@ -12,6 +12,7 @@ import xyz.qweru.pulse.client.utils.QueueUtil;
 import xyz.qweru.pulse.client.utils.annotations.ExcludeModule;
 import xyz.qweru.pulse.client.utils.annotations.Status;
 import xyz.qweru.pulse.client.utils.player.RotationUtil;
+import xyz.qweru.pulse.client.utils.render.font.FontRenderer;
 import xyz.qweru.pulse.client.utils.thread.ThreadManager;
 
 import java.util.ArrayList;
@@ -78,6 +79,10 @@ public class ClientModule {
     public void disable() {
         PulseClient.Events.unsubscribe(this);
         this.enabled = false;
+    }
+
+    public String getState() {
+        return "";
     }
 
     public Category getCategory() {

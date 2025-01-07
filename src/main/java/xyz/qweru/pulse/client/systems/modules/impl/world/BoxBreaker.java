@@ -52,7 +52,7 @@ public class BoxBreaker extends ClientModule {
 
     public BoxBreaker() {
         super("Box Breaker", "Automatically break enemy player boxes", InputUtil.KEY_UNKNOWN, Category.WORLD);
-        builder(this).settings(range, render, swap, onlyVisible, instaMine, imIgnoreBurrow)
+        builder(this).settings(range, render, swap, onlyVisible, instaMine, imIgnoreBurrow, ignoreWebs)
                 .settings("Crystal check", doCrystalCheck, crystalCheck, ccIgnoreBurrow)
                 .settings("Color", miningFill, miningOutline, finishedFill, finishedOutline);
     }
@@ -97,6 +97,9 @@ public class BoxBreaker extends ClientModule {
             .setColor(new Color(110, 193, 117, 120).darker())
             .build();
 
+    BooleanSetting ignoreWebs = new BooleanSetting("Ignore webs", "Don't mine a block if it is cobwebs", false, true);
+
+
     @Override
     public void enable() {
         super.enable();
@@ -117,6 +120,9 @@ public class BoxBreaker extends ClientModule {
 
     List<MyBlock> blocks = new ArrayList<>();
 
+    BlockPos lastTargetPos = null;
+    PlayerEntity lastTarget = null;
+
     boolean swapped = false;
     boolean shouldUpdateSlot = false;
     boolean instamining = false;
@@ -125,7 +131,7 @@ public class BoxBreaker extends ClientModule {
     @EventHandler
     void tick(WorldTickEvent.Pre ignored) {
         if(instamining) {
-            if(currentBlock == null || Vec3d.of(currentBlock.blockPos).distanceTo(mc.player.getPos()) > 6) {
+            if(currentBlock == null || Vec3d.of(currentBlock.blockPos).distanceTo(mc.player.getPos()) > 6 || (lastTarget != null && lastTargetPos != null && (lastTarget.isDead() || lastTarget.getWorld() == null || !lastTargetPos.equals(lastTarget.getBlockPos()) || lastTarget.distanceTo(mc.player) > 6))) {
                 instamining = false;
                 return;
             }
@@ -368,28 +374,8 @@ public class BoxBreaker extends ClientModule {
             else if(crystalCheck.is("either") && !(above || inside)) return false;
         }
         if(onlyVisible.isEnabled() && !PlayerUtil.canSeePos(Vec3d.of(pos), range.getValue())) return false;
+        if(ignoreWebs.isEnabled() && BlockUtil.getBlockAt(pos).equals(Blocks.COBWEB)) return false;
         return !(BlockUtil.getBlockAt(pos).equals(Blocks.AIR) || BlockUtil.getBlockAt(pos).equals(Blocks.WATER) || BlockUtil.getBlockAt(pos).equals(Blocks.LAVA) || BlockUtil.getBlockAt(pos).equals(Blocks.BEDROCK) || BlockUtil.getBlockAt(pos).equals(Blocks.END_PORTAL_FRAME))
                 && PosUtil.distanceBetween(pos.toCenterPos(), mc.player.getPos()) <= range.getValue() && !InstantBreak.isBreaking(pos);
-    }
-
-    void placeCrystal(BlockHitResult result, boolean offhand) {
-        switch ("packet") { //todo setting (im lazy)
-            case "packet" -> {
-                PendingUpdateManager pendingUpdateManager = ((IWorld) mc.world).pulse$getPendingUpdateManager().incrementSequence();
-                try {
-                    PacketUtil.sendImmediately(new PlayerInteractBlockC2SPacket(offhand ? Hand.OFF_HAND : Hand.MAIN_HAND, result, pendingUpdateManager.getSequence()));
-                } catch (Throwable e) {
-                    if(pendingUpdateManager != null) {
-                        try {
-                            pendingUpdateManager.close();
-                        } catch (Throwable var6) {
-                            e.addSuppressed(var6);
-                        }
-                    }
-                    throw e;
-                }
-            }
-            case "client" -> mc.interactionManager.interactBlock(mc.player, offhand ? Hand.OFF_HAND : Hand.MAIN_HAND, result);
-        }
     }
 }

@@ -41,6 +41,12 @@ public class Flight extends ClientModule {
             .min(0f)
             .build();
 
+    private final NumberSetting spoofRemoveTicks = numberSetting()
+            .info("Spoof remove ticks", "(vulcan) how many ticks to wait before removing spoofed blocks")
+            .range(0, 100)
+            .defaultValue(50)
+            .build();
+
     private int tickCounter = 0;
     private final BooleanSetting velMatch = new BooleanSetting("Match vertical speed", "(velocity) match vertical speed", true, true);
     private final BooleanSetting extend = new BooleanSetting("Extend", "Extend block spoof", false, true);

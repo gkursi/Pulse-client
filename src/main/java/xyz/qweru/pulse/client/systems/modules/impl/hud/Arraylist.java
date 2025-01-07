@@ -1,116 +1,68 @@
 package xyz.qweru.pulse.client.systems.modules.impl.hud;
 
 import net.minecraft.client.gui.DrawContext;
+import xyz.qweru.pulse.client.PulseClient;
+import xyz.qweru.pulse.client.managers.Managers;
 import xyz.qweru.pulse.client.managers.impl.ModuleManager;
+import xyz.qweru.pulse.client.render.renderer.Pulse2D;
 import xyz.qweru.pulse.client.render.renderer.RenderContext;
 import xyz.qweru.pulse.client.render.ui.color.ThemeInfo;
 import xyz.qweru.pulse.client.systems.modules.Category;
 import xyz.qweru.pulse.client.systems.modules.ClientModule;
 import xyz.qweru.pulse.client.systems.modules.HudModule;
 import xyz.qweru.pulse.client.render.ui.color.Colors;
+import xyz.qweru.pulse.client.systems.modules.settings.impl.BooleanSetting;
 import xyz.qweru.pulse.client.utils.render.RenderUtil;
+import xyz.qweru.pulse.client.utils.render.font.FontRenderer;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
 public class Arraylist extends HudModule {
     public Arraylist() {
-        super("Arraylist", "Display all enabled modules", -1, Category.HUD, 2, 2, 15, 10);
+        super("Arraylist", "Display all enabled modules", -1, Category.HUD, 2, 2, 100, 300);
+        builder().settings(up, left, colorOffset);
     }
+
+    BooleanSetting up = new BooleanSetting("Up", "render up", false, true);
+    BooleanSetting left = new BooleanSetting("Left", "render left", true, true);
+    BooleanSetting colorOffset = new BooleanSetting("Offset color", "adds offset color to make the module look nicer", true, true);
 
     @Override
     public void render(DrawContext drawContext, float delta, RenderContext context) {
-        if(this.x < (double) context.screenWidth() / 2 && this.y < context.screenHeight()) topLeft(drawContext);
-        else if(this.x > (double) context.screenWidth() / 2 && this.y < context.screenHeight()) topRight(drawContext);
-        else if(this.x < (double) context.screenWidth() / 2 && this.y > context.screenHeight()) bottomLeft(drawContext);
-        else if(this.x > (double) context.screenWidth() / 2 && this.y > context.screenHeight()) bottomRight(drawContext);
-    }
-
-
-    void topRight(DrawContext context) {
-        List<String> data = getArray(context);
-        if(data.isEmpty()) return;
-        height = 0;
-
-        int i = -1;
-        for (String str : data) {
-            double sy = y + i*RenderUtil.textRenderer.getStringHeight(str, false) + RenderUtil.fontOffsetY + 2 * i;
-            double sx = x + width - RenderUtil.textRenderer.getWidth(str);
-
-//            Pulse2D.drawRound(context.getMatrices(), (float) sx - 2, (float) sy - 2, (float) sx + 2 + RenderUtil.textRenderer.getWidth(str),
-//                    (float) sy + 2 + RenderUtil.textRenderer.getStringHeight(str, false),
-//                    Pulse2D.cornerRad, Pulse2D.injectAlpha(ThemeInfo.COLORSCHEME.PRIMARY(), 170));
-
-            RenderUtil.textRenderer.drawString(context.getMatrices(), str, sx, sy, ThemeInfo.COLORSCHEME.TEXT().getRGB());
-            height += RenderUtil.textRenderer.getStringHeight(str, false) + 2;
-        }
-
-    }
-
-    void topLeft(DrawContext context) {
-        List<String> data = getArray(context);
-        double nHeight = 0;
-        double tY = y;
-
-        for (String mod : data) {
-//            Pulse2D.drawRound(context.getMatrices(), (float) x - 2, (float) tY + RenderUtil.fontOffsetY - 2, (float) x + 2 + RenderUtil.textRenderer.getWidth(mod),
-//                    (float) tY + RenderUtil.fontOffsetY + 2 + RenderUtil.textRenderer.getStringHeight(mod, false),
-//                    Pulse2D.cornerRad, Pulse2D.injectAlpha(ThemeInfo.COLORSCHEME.PRIMARY(), 170));
-            RenderUtil.textRenderer.drawString(context.getMatrices(), mod, x, tY + RenderUtil.fontOffsetY, Colors.DEFAULT.TEXT().getRGB());
-            tY += 1 + RenderUtil.textRenderer.getStringHeight(mod, false);
-            nHeight += 1 + RenderUtil.textRenderer.getStringHeight(mod, false);
-        }
-
-        height = nHeight;
-    }
-
-    void bottomRight(DrawContext context) {
-        List<String> data = getArray(context);
-        if(data.isEmpty()) return;
-
-        int i = -1;
-        for (String str : data) {
-            double sy = y + i*RenderUtil.textRenderer.getStringHeight(str, false) + RenderUtil.fontOffsetY + 2 * i;
-            double sx = x + width - RenderUtil.textRenderer.getWidth(str);
-
-//            Pulse2D.drawRound(context.getMatrices(), (float) sx - 2, (float) sy - 2, (float) sx + 2 + RenderUtil.textRenderer.getWidth(str),
-//                    (float) sy + 2 + RenderUtil.textRenderer.getStringHeight(str, false),
-//                    Pulse2D.cornerRad, Pulse2D.injectAlpha(ThemeInfo.COLORSCHEME.PRIMARY(), 170));
-
-            RenderUtil.textRenderer.drawString(context.getMatrices(), str, sx, sy, ThemeInfo.COLORSCHEME.TEXT().getRGB());
-            height += RenderUtil.textRenderer.getStringHeight(str, false) + 2;
-        }
-    }
-
-    void bottomLeft(DrawContext context) {
-        List<String> data = getArray(context);
-        double nHeight = 0;
-        double tY = y;
-
-//        Pulse2D.drawHudBase(context.getMatrices(), (float) x - 2, (float) y - 2, (float) width + 2, (float) height + 2, Pulse2D.cornerRad);
-        for (String mod : data) {
-//            Pulse2D.drawRound(context.getMatrices(), (float) x - 2, (float) tY + RenderUtil.fontOffsetY - 2, (float) x + 2 + RenderUtil.textRenderer.getWidth(mod),
-//                    (float) tY + RenderUtil.fontOffsetY + 2 + RenderUtil.textRenderer.getStringHeight(mod, false),
-//                    Pulse2D.cornerRad, Pulse2D.injectAlpha(ThemeInfo.COLORSCHEME.PRIMARY(), 170));
-            RenderUtil.textRenderer.drawString(context.getMatrices(), mod, x, tY + RenderUtil.fontOffsetY, Colors.DEFAULT.TEXT().getRGB());
-            tY += 1 + RenderUtil.textRenderer.getStringHeight(mod, false);
-            nHeight += 1 + RenderUtil.textRenderer.getStringHeight(mod, false);
-        }
-
-        height = nHeight;
-    }
-
-    ArrayList<String> getArray(DrawContext context) {
-        ArrayList<String> enabled = new ArrayList<>();
-
-        for (ClientModule module : ModuleManager.INSTANCE.getItemList()) {
-            if(module.isEnabled()) {
-                enabled.add(module.getName());
+        boolean up = this.up.isEnabled();
+        boolean left = this.left.isEnabled();
+        ArrayList<FontRenderer.ColoredString> list = new ArrayList<>();
+        for (ClientModule clientModule : Managers.MODULE.getItemList()) {
+            if(clientModule.isEnabled()) {
+                FontRenderer.ColoredString string = FontRenderer.ColoredString.of(clientModule.getName(), context.colorScheme().getLabelColor());
+                if(!clientModule.getState().isBlank()) string.add(" " + clientModule.getState(), context.colorScheme().TEXT());
+                list.add(string);
             }
         }
 
-        enabled.sort(Comparator.comparingDouble((value -> (this.y <= (double) context.getScaledWindowHeight() / 2 ? -RenderUtil.textRenderer.getWidth(value) : RenderUtil.textRenderer.getWidth(value)))));
-        return enabled;
+        list.sort(Comparator.comparingDouble(coloredString -> up ? -coloredString.getWidth() : coloredString.getWidth()));
+
+        float textX = (float) (left ? x : x + width);
+        float textY = (float) y;
+        for (FontRenderer.ColoredString string : list) {
+            if(left) {
+                if(colorOffset.isEnabled()) Pulse2D.drawRound(context.getMatrices(), textX - 0, textY, string.getWidth() + 1, string.getHeight() + 1, Pulse2D.cornerRad, context.colorScheme().ACCENT());
+                Pulse2D.drawRound(context.getMatrices(), textX - 0 - 1, textY - 1, string.getWidth() + 1, string.getHeight() + 1, Pulse2D.cornerRad, context.colorScheme().PRIMARY());
+            } else {
+                if(colorOffset.isEnabled()) Pulse2D.drawRound(context.getMatrices(), textX - string.getWidth(), textY, string.getWidth() + 1, string.getHeight() + 1, Pulse2D.cornerRad, context.colorScheme().ACCENT());
+                Pulse2D.drawRound(context.getMatrices(), textX - string.getWidth() - 1, textY - 1, string.getWidth() + 1, string.getHeight() + 1, Pulse2D.cornerRad, context.colorScheme().PRIMARY());
+            }
+            textY += string.getHeight();
+        }
+
+        textX = (float) (left ? x : x + width);
+        textY = (float) y;
+        for (FontRenderer.ColoredString string : list) {
+            RenderUtil.textRenderer.drawColoredString(context.getMatrices(), string, textX - (left ? 0 : string.getWidth()), textY + RenderUtil.fontOffsetY);
+            textY += string.getHeight();
+        }
     }
 }
