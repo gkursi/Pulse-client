@@ -1,10 +1,13 @@
 package xyz.qweru.pulse.client.systems.modules.impl.misc;
 
+import net.minecraft.util.math.MathHelper;
 import xyz.qweru.pulse.client.systems.modules.Category;
 import xyz.qweru.pulse.client.systems.modules.ClientModule;
 import xyz.qweru.pulse.client.systems.modules.settings.builders.BooleanSettingBuilder;
 import xyz.qweru.pulse.client.systems.modules.settings.impl.BooleanSetting;
+import xyz.qweru.pulse.client.systems.modules.settings.impl.ModeSetting;
 import xyz.qweru.pulse.client.systems.modules.settings.impl.TextSetting;
+import xyz.qweru.pulse.client.utils.render.AnimationUtil;
 
 public class Chat extends ClientModule {
 
@@ -37,17 +40,17 @@ public class Chat extends ClientModule {
             .description("Use custom font")
             .build();
 
-    public static BooleanSetting slideIn = new BooleanSettingBuilder()
-            .name("Slide in")
+    public static BooleanSetting animation = new BooleanSettingBuilder()
+            .name("Animation")
             .description("All new messages have an animation")
             .build();
 
     public Chat() {
         super("Chat", "Chat options", -1, Category.MISC);
-        builder(this).settings(suffix, prefix,fancyChat, onlySuffix, timestamps, font, slideIn, noBG);
+        builder(this).settings(suffix, prefix,fancyChat, onlySuffix, timestamps, font, noBG)
+                .settings("Animation", animation);
 
         fancyChat.addOnToggle(() -> onlySuffix.setShouldShow(fancyChat.isEnabled()));
     }
-
 
 }

@@ -11,6 +11,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
 import net.minecraft.network.packet.s2c.play.UpdateSelectedSlotS2CPacket;
+import net.minecraft.util.Formatting;
 import org.lwjgl.glfw.GLFW;
 import xyz.qweru.pulse.client.auth.pulse.PulseAuth;
 import xyz.qweru.pulse.client.managers.Managers;
@@ -33,6 +34,7 @@ import xyz.qweru.pulse.client.utils.ExceptionHandler;
 import xyz.qweru.pulse.client.utils.PulseLogger;
 import xyz.qweru.pulse.client.utils.QueueUtil;
 import xyz.qweru.pulse.client.utils.Util;
+import xyz.qweru.pulse.client.utils.dupe.DupeManager;
 import xyz.qweru.pulse.client.utils.player.ChatUtil;
 import xyz.qweru.pulse.client.utils.player.RotationUtil;
 import xyz.qweru.pulse.client.utils.player.Rotations;
@@ -136,6 +138,7 @@ public class PulseClient implements ModInitializer {
 		logger.debug("Loaded visuals");
 
 		ThreadManager.fixedPool.submit(RPC::init);
+		DupeManager.INSTANCE.setCurrent(DupeManager.Dupers.DUPE_ANARCHY);
 
 		LOGGER.info("Loaded {} {} by {}", NAME, VERSION, AUTHOR);
 		globTimer.reset();
@@ -147,7 +150,6 @@ public class PulseClient implements ModInitializer {
 
 	public void firstRun() {
 		isFirstRun = true;
-		QueueUtil.onWorldLoad(() -> ChatUtil.info("Default gui key is Right Control, you can bind modules by middle clicking on them."));
 	}
 
 	@EventHandler
@@ -156,12 +158,14 @@ public class PulseClient implements ModInitializer {
 		if(event.getKey() == -1) return;
 		for(ClientModule m : ModuleManager.INSTANCE.getItemList()) {
 			if(m.getBind() == event.getKey()) {
+				boolean prevToggled = m.isEnabled();
 				if(mc.currentScreen == null) m.toggle();
 				else if(m instanceof ClickGUI) m.toggle();
 				else continue;
 				if(!(m instanceof ClickGUI || m instanceof Macro)) {
-					if(Notifications.notify("Toggle", (m.isEnabled() ? "Enabled " : "Disabled ")+ m.getName(), Notifications.Type.INFO)) return;
-					ChatUtil.sendLocalMsg((m.isEnabled() ? "Enabled " : "Disabled ") + m.getName());
+					String text = (!prevToggled && !m.isEnabled()) ? (Formatting.GRAY + "Ran " + Formatting.RESET + m.getName()) : ((m.isEnabled() ? Formatting.GREEN + "Enabled " + Formatting.RESET : Formatting.RED + "Disabled " + Formatting.RESET) + m.getName());
+					if(Notifications.notify("Toggle", text, Notifications.Type.INFO)) return;
+					ChatUtil.sendLocalMsg(text);
 				}
 			}
 		}

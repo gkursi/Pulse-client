@@ -7,10 +7,8 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.ChatHud;
 import net.minecraft.client.gui.hud.ChatHudLine;
 import net.minecraft.client.gui.hud.MessageIndicator;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.network.message.MessageSignatureData;
 import net.minecraft.text.*;
-import net.minecraft.util.Formatting;
 import net.minecraft.util.math.MathHelper;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -25,17 +23,14 @@ import xyz.qweru.pulse.client.PulseClient;
 import xyz.qweru.pulse.client.managers.Managers;
 import xyz.qweru.pulse.client.managers.impl.ModuleManager;
 import xyz.qweru.pulse.client.mixin.iinterface.IChatHud;
-import xyz.qweru.pulse.client.render.renderer.Pulse2D;
 import xyz.qweru.pulse.client.render.ui.color.ThemeInfo;
 import xyz.qweru.pulse.client.systems.modules.impl.misc.AutoDupe;
 import xyz.qweru.pulse.client.systems.modules.impl.misc.Chat;
 import xyz.qweru.pulse.client.utils.Util;
 import xyz.qweru.pulse.client.utils.render.RenderUtil;
 
-import java.awt.*;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
 
 @Mixin(ChatHud.class)
 public abstract class ChatHudMixin implements IChatHud {
@@ -162,7 +157,6 @@ public abstract class ChatHudMixin implements IChatHud {
 
 //    @Inject(method = "addMessage(Lnet/minecraft/client/gui/hud/ChatHudLine;)V", at = @At())
 
-    // todo: add slide in animations
     @Inject(method = "render", at = @At("HEAD"), cancellable = true)
     void drawText(DrawContext context, int currentTick, int mouseX, int mouseY, boolean focused, CallbackInfo ci) {
         if(Managers.MODULE.getItemByClass(Chat.class).isEnabled()) {
@@ -213,7 +207,7 @@ public abstract class ChatHudMixin implements IChatHud {
 
                                     context.getMatrices().push();
                                     context.getMatrices().translate(0.0F, 0.0F, 50.0F);
-                                    if(Chat.font.isEnabled()) RenderUtil.textRenderer.drawOrderedText(context.getMatrices(), visible.content(), Chat.slideIn.isEnabled() ? -xOff : 0, y + RenderUtil.fontOffsetY);
+                                    if(Chat.font.isEnabled()) RenderUtil.textRenderer.drawOrderedText(context.getMatrices(), visible.content(), Chat.animation.isEnabled() ? -xOff : 0, y + RenderUtil.fontOffsetY);
                                     else context.drawTextWithShadow(this.client.textRenderer, visible.content(), 0, y, 0xFFFFFF + (u << 24));
                                     context.getMatrices().pop();
                                 }

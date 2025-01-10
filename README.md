@@ -31,6 +31,7 @@ Alternatively you can download a prebuilt jar from GitHub actions
 * 3d renderer - https://github.com/0x3C50/Renderer
 * part of 2d renderer - https://github.com/Pan4ur/ThunderHack-Recode
 * damage utils, rotations, some mining related stuff, broken ms auth - https://github.com/MeteorDevelopment/meteor-client/
+* fade utils - https://github.com/iM4dCat/Alien
 * misc. utils - Lumina Client premium
 * font renderer - no idea but it's not mine
 ### People
