@@ -1,6 +1,6 @@
 # Pulse client
 Anarchy / utility client for Fabric 1.21.1 \
-Created for playing on `play.dupeanarchy.com` \
+Originally created for playing on `play.dupeanarchy.com` \
 The code quality is dogshit, with some rare exceptions
 where it's even more dogshit (see [ModuleWidget.java](https://github.com/Pulse-Client-Dev/Pulse-Client/blob/master/src/main/java/xyz/qweru/pulse/client/render/ui/gui/widgets/ModuleWidget.java)) \
 Feel free to open pull requests.
@@ -9,12 +9,19 @@ Feel free to open pull requests.
 ![image 2](./assets/image2.png)
 ![image 3](./assets/image3.png)
 ## Usage
-### Installation
+### Installation (from source)
 1. Clone the repository
 2. Run `./gradlew genSources`
 3. Run `./gradlew build`
-4. Client jar is in `build/libs/pulseclient-???.jar` (not `..-sources.jar`) \
-Alternatively you can download a prebuilt jar from GitHub actions
+4. Client jar is in `build/libs/pulseclient-???.jar` (not `..-sources.jar`)
+### Installation (prebuilt)
+1. Go to commits
+2. Click the first commit that has a checkmark next to it
+3. Click on the checkmark
+4. Click on "details"
+5. Click on "summary"
+6. Click on "Artifacts"
+7. The client should be in the zip file (use `pulseclient-?.?.?.jar`, NOT `pulseclient-?.?.?-sources.jar`)
 ### Optional dependencies
 * Playerctl (linux only) has to be installed to use the playerctl hud module
 ### Binds
