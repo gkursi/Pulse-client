@@ -3,6 +3,8 @@ package xyz.qweru.pulse.client.systems.modules.impl.movement;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.option.GameOptions;
+import net.minecraft.item.BlockItem;
+import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
@@ -33,7 +35,7 @@ public class AutoPhase extends ClientModule {
         builder(this)
                 .name("AutoPhase")
                 .description("Automatically phase in to the wall using ender pearls (WIP)")
-                .settings(silentSwitch, mode, noPearlRot, placeBlock, delay)
+                .settings(silentSwitch, pearlRotMode, noPearlRot, placeBlock, blockMode, delay, jump)
                 .category(Category.MOVEMENT);
     }
 
@@ -43,14 +45,20 @@ public class AutoPhase extends ClientModule {
             .defaultValue(true)
             .build();
 
+    BooleanSetting jump = booleanSetting()
+            .name("Jump")
+            .description("Jump just before throwing the pearl, bypasses some anticheats")
+            .defaultValue(true)
+            .build();
+
     BooleanSetting noPearlRot = booleanSetting()
             .name("Ignore pearl rotation")
             .description("Ignore ender pearl rotation")
             .defaultValue(true)
             .build();
 
-    ModeSetting mode = modeSetting()
-            .name("Mode")
+    ModeSetting pearlRotMode = modeSetting()
+            .name("Pearl rotation mode")
             .description("mode")
             .defaultMode("Simple")
             .mode("Smart")
@@ -61,6 +69,14 @@ public class AutoPhase extends ClientModule {
             .name("Place block")
             .description("Ignore ender pearl rotation")
             .defaultValue(true)
+            .build();
+
+    ModeSetting blockMode = modeSetting()
+            .name("Block mode")
+            .description("what block to place")
+            .defaultMode("Any")
+            .mode("Webs")
+            .mode("Any")
             .build();
 
     NumberSetting delay = numberSetting()
@@ -115,10 +131,11 @@ public class AutoPhase extends ClientModule {
         if(Util.nullCheck()) return;
         int ps = mc.player.getInventory().selectedSlot;
         SlotUtil.runWithItem((slot, inventory) -> {
-            if(mode.is("simple")) {
+            if(jump.isEnabled()) mc.player.jump();
+            if(pearlRotMode.is("simple")) {
                 PlayerUtil.interact(mc.player, Hand.MAIN_HAND, slot, 81, mc.player.getYaw());
                 PacketUtil.send(new UpdateSelectedSlotC2SPacket(ps));
-            } else if(mode.is("smart")) {
+            } else if(pearlRotMode.is("smart")) {
                 Direction direction = getVelocityDirection();
 
                 float pitch = 81;
@@ -128,13 +145,13 @@ public class AutoPhase extends ClientModule {
                 }
 
                 if(placeBlock.isEnabled()) {
-                    BlockPos pos = BlockPos.ofFloored(mc.player.getPos().offset(direction, 1));
+                    BlockPos pos = blockMode.is("Webs") ? mc.player.getBlockPos() :BlockPos.ofFloored(mc.player.getPos().offset(direction, 1));
                     if(BlockUtil.getBlockAt(pos).equals(Blocks.AIR) && BlockUtil.getBlockAt(mc.player.getBlockPos()).equals(Blocks.AIR)) {
                         if(mc.player.getPos().distanceTo(Vec3d.of(pos)) > 0.5f) pitch = 75f;
                         Direction finalDirection = direction;
-                        SlotUtil.runWithItem((s, i) -> {
+                        SlotUtil.runWithItemFilter((s, i) -> {
                             PlayerUtil.placeBlock(new BlockHitResult(Vec3d.of(pos), finalDirection, pos, false));
-                        }, Items.OBSIDIAN, silentSwitch.isEnabled());
+                        }, item -> blockMode.is("Webs") ? item.getItem().equals(Items.COBWEB) : item.getItem() instanceof BlockItem, silentSwitch.isEnabled());
                     }
                     Util.sleep(delay.getValueLong());
                 }
@@ -156,7 +173,6 @@ public class AutoPhase extends ClientModule {
         if(Util.nullCheck()) return;
         if(e.getPacket() instanceof PlayerPositionLookS2CPacket packet && noPearlRot.isEnabled()) {
             ((IPlayerPositionLookS2CPacket) packet).pulse$setLook(mc.player.getPitch(), mc.player.getYaw());
-            LOGGER.info("Server pos look packet: {}", e.getPacket().getClass().getSimpleName());
             this.toggle();
         }
     }

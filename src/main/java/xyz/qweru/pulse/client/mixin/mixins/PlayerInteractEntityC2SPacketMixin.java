@@ -17,8 +17,22 @@ public class PlayerInteractEntityC2SPacketMixin implements IPlayerInteractEntity
     @Mutable
     @Shadow @Final private int entityId;
 
+//    @Shadow @Final private PlayerInteractEntityC2SPacket.InteractTypeHandler type;
+//
+//    @Shadow @Final
+//    static PlayerInteractEntityC2SPacket.InteractTypeHandler ATTACK;
+
     @Override
     public void pulse$setID(int id) {
         this.entityId = id;
     }
+
+    // this is peak code trust me
+    // nvm it doesn't work :(
+//    @Override
+//    public boolean pulse$isAttack() {
+//        return this.type == ATTACK;
+//    }
+
+
 }
