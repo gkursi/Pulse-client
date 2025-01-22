@@ -29,7 +29,7 @@ import java.util.function.Supplier;
 public class Pulse3D {
     static final List<FadingBlock> fades = new CopyOnWriteArrayList<>();
     private static final MinecraftClient client = MinecraftClient.getInstance();
-    private static boolean renderThroughWalls = false;
+    private static boolean renderThroughWalls = true;
 
     /**
      * Starts rendering through walls
@@ -58,7 +58,7 @@ public class Pulse3D {
         RenderSystem.enableBlend();
         RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
         RenderSystem.enableDepthTest();
-        RenderSystem.depthFunc(renderThroughWalls ? GL11.GL_ALWAYS : GL11.GL_LEQUAL);
+        RenderSystem.depthFunc(GL11.GL_ALWAYS);
     }
 
     private static void endRender() {

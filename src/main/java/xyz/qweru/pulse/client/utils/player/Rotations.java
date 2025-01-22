@@ -19,12 +19,14 @@ import xyz.qweru.pulse.client.utils.Pool;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
+import static xyz.qweru.pulse.client.PulseClient.LOGGER;
 import static xyz.qweru.pulse.client.PulseClient.mc;
 
 public class Rotations {
     private static final Pool<Rotation> rotationPool = new Pool<>(Rotation::new);
-    private static final List<Rotation> rotations = new ArrayList<>();
+    private static final List<Rotation> rotations = new CopyOnWriteArrayList<>();
     public static float serverYaw;
     public static float serverPitch;
     public static int rotationTimer;
@@ -95,7 +97,6 @@ public class Rotations {
             setupMovementPacketRotation(rotation);
 
             if (rotations.size() > 1) rotationPool.free(rotation);
-
             i++;
         } else if (lastRotation != null) {
             if (lastRotationTimer >= 5) {
@@ -127,27 +128,20 @@ public class Rotations {
         if(!(event.getPacket() instanceof PlayerMoveC2SPacket)) return;
         if (!rotations.isEmpty()) {
             if (mc.cameraEntity == mc.player) {
-                rotations.get(i - 1).runCallback();
-
-                if (rotations.size() == 1) lastRotation = rotations.get(i - 1);
-
+                if(lastRotation != null) lastRotation.runCallback();
                 resetPreRotation();
             }
-
-            for (; i < rotations.size(); i++) {
-                Rotation rotation = rotations.get(i);
-
-                setCamRotation(rotation.yaw, rotation.pitch);
-                if (rotation.clientSide) setClientRotation(rotation);
-                rotation.sendPacket();
-                if (rotation.clientSide) resetPreRotation();
-
-                if (i == rotations.size() - 1) lastRotation = rotation;
-                else rotationPool.free(rotation);
-            }
-
-            rotations.clear();
             i = 0;
+//            for (; i < rotations.size(); i++) {
+            Rotation rotation = rotations.get(i);
+            rotations.clear();
+            setCamRotation(rotation.yaw, rotation.pitch);
+            if (rotation.clientSide) setClientRotation(rotation);
+            rotation.sendPacket();
+            if (rotation.clientSide) resetPreRotation();
+
+            lastRotation = rotation;
+
         } else if (sentLastRotation) {
             resetPreRotation();
         }
@@ -236,6 +230,7 @@ public class Rotations {
 
         public void sendPacket() {
             mc.getNetworkHandler().sendPacket(new PlayerMoveC2SPacket.LookAndOnGround((float) yaw, (float) pitch, mc.player.isOnGround()));
+            LOGGER.info("Sent packet: {} {}", yaw, pitch);
             runCallback();
         }
 

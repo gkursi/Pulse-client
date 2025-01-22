@@ -223,7 +223,6 @@ public class Surround extends ClientModule {
                     placing = true;
                     for (BlockPos place : places) {
                         if(i > bpt.getValue()) {
-                            placing = false;
                             break;
                         }
                         if(render.isEnabled() && !spamPlace.isEnabled()) this.places.add(getBlockFrom(place));
@@ -231,11 +230,11 @@ public class Surround extends ClientModule {
                         curPos = new Vec3d(place.getX(), place.getY(), place.getZ());
                         if(rotate.isEnabled()) {
                             Rotations.rotate(Rotations.getYaw(place.toCenterPos()), Rotations.getPitch(place.toCenterPos()), 10000, () -> {
-                                PlayerUtil.placeBlock(new BlockHitResult(curPos, Direction.DOWN, place, false));
+                                PlayerUtil.placeBlock(new BlockHitResult(new Vec3d(place.getX(), place.getY(), place.getZ()), Direction.UP, place, false));
                             });
                         } else {
                             Util.sleep(((long) delay.getValue()));
-                            PlayerUtil.placeBlock(new BlockHitResult(curPos, Direction.DOWN, place, false));
+                            PlayerUtil.placeBlock(new BlockHitResult(curPos, Direction.UP, place, false));
                         }
                         i++;
                     }

@@ -21,6 +21,7 @@ import net.minecraft.world.RaycastContext;
 import xyz.qweru.pulse.client.PulseClient;
 import xyz.qweru.pulse.client.managers.Managers;
 import xyz.qweru.pulse.client.mixin.iinterface.IPlayerInteractEntityC2SPacket;
+import xyz.qweru.pulse.client.render.renderer.Pulse3D;
 import xyz.qweru.pulse.client.render.world.blocks.FadeOutBlock;
 import xyz.qweru.pulse.client.systems.events.InstamineEvent;
 import xyz.qweru.pulse.client.systems.events.Render3DEvent;
@@ -39,9 +40,9 @@ import xyz.qweru.pulse.client.utils.entity.DamageUtils;
 import xyz.qweru.pulse.client.utils.entity.EntityFinder;
 import xyz.qweru.pulse.client.utils.player.ChatUtil;
 import xyz.qweru.pulse.client.utils.player.InventoryUtils;
-import xyz.qweru.pulse.client.utils.player.RotationUtil;
 import xyz.qweru.pulse.client.utils.player.Rotations;
 import xyz.qweru.pulse.client.utils.thread.ThreadManager;
+import xyz.qweru.pulse.client.utils.timer.FadeUtils;
 import xyz.qweru.pulse.client.utils.world.BlockUtil;
 import xyz.qweru.pulse.client.utils.world.PacketUtil;
 import xyz.qweru.pulse.client.utils.world.PosUtil;
@@ -325,7 +326,7 @@ public class AutoCrystal extends ClientModule {
         }
     }
 
-    List<CompletableEndCrystalData> crystalsToPlace = new ArrayList<>();
+    List<EndCrystalData> crystalsToPlace = new ArrayList<>();
     void calcPlacements() {
         if(usingCrystals) return;
         crystalsToPlace.clear();
@@ -333,7 +334,7 @@ public class AutoCrystal extends ClientModule {
             if(!(entity instanceof LivingEntity) || (entity instanceof PlayerEntity pe && PulseClient.friendSystem.isPlayerInSystem(pe.getGameProfile().getName())) || !entity.isAlive() || !((LivingEntity) entity).canTakeDamage()) continue;
             if(entity.getDisplayName().equals(mc.player.getDisplayName())) continue;
             if(PosUtil.distanceBetween(mc.player.getPos(), entity.getPos()) > targetRange.getValue()) continue;
-            List<CompletableEndCrystalData> possiblePlacements = new ArrayList<>();
+            List<EndCrystalData> possiblePlacements = new ArrayList<>();
             Vec3d targetPos = entity.getPos();
             Vec3d playerPos = mc.player.getPos();
             if(extrapolate.isEnabled()) targetPos = PosUtil.predictPos((LivingEntity) entity, ((int) Math.floor(extrapolationTicks.getValue())));
@@ -356,13 +357,13 @@ public class AutoCrystal extends ClientModule {
                     float selfDamage = DamageUtils.crystalDamage(mc.player, bp.add(0, 1, 0).toCenterPos());
                     if(extrapolateSelf.isEnabled()) mc.player.setPos(pos.getX(), pos.getY(), pos.getZ());
                     double distance = PosUtil.distanceBetween(bp.add(0, 1, 0).toBottomCenterPos(), entity.getPos());
-                    possiblePlacements.add(new CompletableEndCrystalData(bp.toCenterPos(), distance, damage, selfDamage, entity.getPos(), (entity instanceof PlayerEntity p ? p.getGameProfile().getName() : Util.orderedTextToString(entity.getDisplayName().asOrderedText()))));
+                    possiblePlacements.add(new EndCrystalData(bp.toCenterPos(), distance, damage, selfDamage, entity.getPos(), (entity instanceof PlayerEntity p ? p.getGameProfile().getName() : Util.orderedTextToString(entity.getDisplayName().asOrderedText()))));
                     if(spoofInstamineBlock) {
                         mc.world.setBlockState(spoofPos, prev);
                     }
                 }
             }, ((int) crystalScanRange.getValue()), targetPos);
-            CompletableEndCrystalData bestPlacement = null;
+            EndCrystalData bestPlacement = null;
             switch (placeSort.getCurrent()) {
                 case "damage" -> bestPlacement = getBestDamage(possiblePlacements);
                 case "distance" -> bestPlacement = getBestDistance(possiblePlacements);
@@ -371,11 +372,15 @@ public class AutoCrystal extends ClientModule {
                 crystalsToPlace.add(bestPlacement);
             }
         }
+        if(crystalsToPlace.isEmpty()) return;
+        // only place the closest crystal
+        crystalsToPlace.sort(Comparator.comparingDouble(data -> data.pos.distanceTo(mc.player.getPos())));
+        crystalsToPlace = new ArrayList<>(List.of(crystalsToPlace.get(0)));
     }
 
-    CompletableEndCrystalData getBestDamage(List<CompletableEndCrystalData> placements) {
-        CompletableEndCrystalData bestCrystal = null;
-        for (CompletableEndCrystalData placement : placements) {
+    EndCrystalData getBestDamage(List<EndCrystalData> placements) {
+        EndCrystalData bestCrystal = null;
+        for (EndCrystalData placement : placements) {
             if(bestCrystal == null) {
                 if(placement.damageToTarget > minTargetDamage.getValue() && placement.damageToSelf < maxSelfDamage.getValue()) bestCrystal = placement;
             } else
@@ -389,9 +394,9 @@ public class AutoCrystal extends ClientModule {
         return bestCrystal;
     }
 
-    CompletableEndCrystalData getBestDistance(List<CompletableEndCrystalData> placements) {
-        CompletableEndCrystalData bestCrystal = null;
-        for (CompletableEndCrystalData placement : placements) {
+    EndCrystalData getBestDistance(List<EndCrystalData> placements) {
+        EndCrystalData bestCrystal = null;
+        for (EndCrystalData placement : placements) {
             if(bestCrystal == null) {
                 bestCrystal = placement;
                 continue;
@@ -426,7 +431,7 @@ public class AutoCrystal extends ClientModule {
         }
         usingCrystals = true;
         if(!crystalsToPlace.isEmpty()) {
-            for (CompletableEndCrystalData crystalData : crystalsToPlace) {
+            for (EndCrystalData crystalData : crystalsToPlace) {
                 placed = true;
                 targetPos = crystalData.targetPos;
                 for (int i = 0; i < placesPerTick.getValue(); i++) exec(crystalData);
@@ -456,7 +461,7 @@ public class AutoCrystal extends ClientModule {
         }
         usingCrystals = true;
         if(!crystalsToPlace.isEmpty()) {
-            for (CompletableEndCrystalData crystalData : crystalsToPlace) {
+            for (EndCrystalData crystalData : crystalsToPlace) {
                 for (int i = 0; i < placesPerTick.getValue(); i++) exec(crystalData);
             }
             if (redupe.isEnabled()) {
@@ -485,7 +490,7 @@ public class AutoCrystal extends ClientModule {
     }
 
     Entity lastEntity = null;
-    void exec(CompletableEndCrystalData crystalData) {
+    void exec(EndCrystalData crystalData) {
         if(pauseOnSurrond.isEnabled() && Surround.placing) return;
         if(rotate.isEnabled()) {
             Rotations.rotate(
@@ -579,6 +584,8 @@ public class AutoCrystal extends ClientModule {
     }
 
     List<FadeOutBlock> fades = new ArrayList<>();
+    Vec3d lastPos = null;
+    FadeUtils animation = new FadeUtils(450);
     @EventHandler
     private void render3D(Render3DEvent e) {
         if(!render.isEnabled()) return;
@@ -587,12 +594,37 @@ public class AutoCrystal extends ClientModule {
 //        Vec3d end = RenderUtil.getPointInDirection(mc.player.getCameraPosVec(e.getTickCounter().getTickDelta(true)), RotationUtil.getServerPitch(), RotationUtil.getServerYaw(), 7);
 //        Renderer3d.renderLine(e.getMatrixStack(), Color.blue, mc.player.getCameraPosVec(e.getTickCounter().getTickDelta(true)), end);
 
-        for (CompletableEndCrystalData crystalData : crystalsToPlace) {
-            if(renderMode.is("Support block")) {
-                fades.add(new FadeOutBlock(BlockPos.ofFloored(crystalData.pos), renderColor.getJavaColor(), renderColor.getJavaColor().darker(), 450));
-            } else if (renderMode.is("Crystal block")) {
-                fades.add(new FadeOutBlock(BlockPos.ofFloored(crystalData.pos.add(0, 1, 0)), renderColor.getJavaColor(), renderColor.getJavaColor().darker(), 450));
+        if(!crystalsToPlace.isEmpty()) {
+            EndCrystalData data = crystalsToPlace.get(0);
+            Vec3d actualPos;
+            Vec3d curPos = Vec3d.of(BlockPos.ofFloored(data.pos)); // floor
+            if(lastPos == null) {
+                lastPos = curPos;
+                actualPos = lastPos;
             }
+            else if(lastPos != curPos) {
+                if(animation.isEnd()) {
+                    lastPos = curPos;
+                    animation.reset();
+                    actualPos = lastPos;
+                } else actualPos = animatePos(lastPos, curPos, animation.ease(FadeUtils.Ease.Fast));
+            } else {
+                animation.reset();
+                actualPos = curPos;
+            }
+            Pulse3D.renderEdged(e.getMatrixStack(), renderColor.getJavaColor(), renderColor.getJavaColor().darker(), actualPos, new Vec3d(1, 1, 1));
+            if(renderMode.is("Support block")) {
+                Pulse3D.renderEdged(e.getMatrixStack(), renderColor.getJavaColor(), renderColor.getJavaColor().darker(), actualPos, new Vec3d(1, 1, 1));
+            } else if (renderMode.is("Crystal block")) {
+                Pulse3D.renderEdged(e.getMatrixStack(), renderColor.getJavaColor(), renderColor.getJavaColor().darker(), actualPos.add(0, 1, 0), new Vec3d(1, 1, 1));
+            }
+        } else if(lastPos != null){
+            if(renderMode.is("Support block")) {
+                fades.add(new FadeOutBlock(BlockPos.ofFloored(lastPos), renderColor.getJavaColor(), renderColor.getJavaColor().darker(), 450));
+            } else if (renderMode.is("Crystal block")) {
+                fades.add(new FadeOutBlock(BlockPos.ofFloored(lastPos.add(0, 1, 0)), renderColor.getJavaColor(), renderColor.getJavaColor().darker(), 450));
+            }
+            lastPos = null;
         }
 
         Iterator<FadeOutBlock> iterator = fades.iterator();
@@ -601,6 +633,10 @@ public class AutoCrystal extends ClientModule {
             if(block.hasFaded()) iterator.remove();
             else block.render(e.getMatrixStack());
         }
+    }
+
+    Vec3d animatePos(Vec3d pos1, Vec3d pos2, double p) {
+        return pos1.add(pos2.subtract(pos1).multiply(p));
     }
 
     @Override
@@ -640,5 +676,5 @@ public class AutoCrystal extends ClientModule {
         return targetPos == null ? "" : targetPos.toString();
     }
 
-    record CompletableEndCrystalData(Vec3d pos, Double distanceToTarget, Float damageToTarget, Float damageToSelf, Vec3d targetPos, String targetName) {}
+    record EndCrystalData(Vec3d pos, Double distanceToTarget, Float damageToTarget, Float damageToSelf, Vec3d targetPos, String targetName) {}
 }

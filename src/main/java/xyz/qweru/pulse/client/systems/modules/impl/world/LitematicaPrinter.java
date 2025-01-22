@@ -4,6 +4,7 @@ import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.schematic.LitematicaSchematic;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacement;
 import fi.dy.masa.litematica.schematic.placement.SchematicPlacementManager;
+import fi.dy.masa.litematica.schematic.placement.SubRegionPlacement;
 import fi.dy.masa.litematica.world.SchematicWorldHandler;
 import fi.dy.masa.litematica.world.WorldSchematic;
 import meteordevelopment.orbit.EventHandler;
@@ -42,7 +43,7 @@ public class LitematicaPrinter extends ClientModule {
     double moveDistancePerTick = 5;
     int placeRange = 256;
 
-    double reach = 4;
+    double reach = 6;
 
     public LitematicaPrinter() {
         builder()
@@ -63,6 +64,7 @@ public class LitematicaPrinter extends ClientModule {
             if(actionCount >= actionsPerTick) break;
             action.execute();
             actionCount++;
+            LOGGER.info("Executing action, place: {}, swap: {}", action);
         }
     }
 
@@ -71,17 +73,26 @@ public class LitematicaPrinter extends ClientModule {
         int prevSlot = -1;
         HashMap<Item, Integer> slotMap = new HashMap<>();
         for (double x = -reach; x < reach; x++) {
-            for (double y = -reach; x < reach; x++) {
-                for (double z = -reach; x < reach; x++) {
-                    if(x == 0 && (y == 0 || y == 1) && z == 0) continue; // dont place inside player
+            for (double y = -reach; y < reach; y++) {
+                for (double z = -reach; z < reach; z++) {
                     BlockPos pos = initial.add((int) x, (int) y, (int) z);
+                    LOGGER.info("Action pos: {}", pos);
+                    if(x == 0 && (y == 0 || y == 1) && z == 0) {
+                        LOGGER.info("Ignored {} (inside player)", pos);
+                        continue; // dont place inside player
+                    }
                     BlockState target = schematic.getBlockState(pos);
                     BlockState current = mc.world.getBlockState(pos);
 
-                    if(target.equals(current) || target.isAir() || !current.isReplaceable()) continue; // will stop if block cannot be placed inside
+                    LOGGER.info("target state: {}, current state: {}", target.getBlock().getName(), current.getBlock().getName());
+
+                    if(target.equals(current) || target.isAir() || !current.isReplaceable()) {
+                        LOGGER.info("Ignored {} (targetIsAir: {}, current is replaceable: {}, target is current: {})", pos, target.isAir(), current.isReplaceable(), target.equals(current));
+                        continue; // will stop if block cannot be placed inside
+                    }
                     Item targetItem = target.getBlock().asItem();
                     int slot;
-                    if(!slotMap.containsKey(targetItem)) slot = slotMap.get(targetItem);
+                    if(slotMap.containsKey(targetItem)) slot = slotMap.get(targetItem);
                     else {
                         slot = onlyHotbar ? InventoryUtils.getItemSlotHotbar(targetItem) : InventoryUtils.getItemSlotAll(targetItem);
                         if(slot == -1) {
@@ -93,6 +104,7 @@ public class LitematicaPrinter extends ClientModule {
                     }
                     Swap swap = slot == prevSlot ? null : new Swap(slot, slot < 9);
                     actions.add(new Action(null, swap, pos));
+                    LOGGER.info("Added action (swap: ({}, inv: {}), pos: {})", swap == null ? "null" : swap.slot, swap == null ? "null" : swap.invSwap, pos);
                 }
             }
         }
@@ -114,8 +126,10 @@ public class LitematicaPrinter extends ClientModule {
         }
 
         public void execute() {
+            LOGGER.info("Executing action");
             // moving
             if(move != null) {
+                LOGGER.info("Moving to {}", move.target);
                 if(move.multiStep) {
                     lerpTP();
                 } else {
@@ -126,6 +140,7 @@ public class LitematicaPrinter extends ClientModule {
 
             // swapping
             if(swap != null) {
+                LOGGER.info("Swapping to {} (invSwap: {})", swap.slot, swap.invSwap);
                 if(swap.invSwap) {
                     pickSwitch(swap.slot);
                 } else {
@@ -134,6 +149,7 @@ public class LitematicaPrinter extends ClientModule {
                 }
             }
 
+            LOGGER.info("Placing block at {} ({} attempts)", place, placeAttempts);
             for (int i = 0; i < placeAttempts; i++) {
                 PlayerUtil.placeBlock(new BlockHitResult(Vec3d.of(place), Direction.UP, place, false));
             }
