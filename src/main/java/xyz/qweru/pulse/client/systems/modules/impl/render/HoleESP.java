@@ -7,7 +7,6 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
-import org.spongepowered.asm.mixin.injection.Inject;
 import xyz.qweru.pulse.client.render.renderer.Pulse2D;
 import xyz.qweru.pulse.client.systems.events.Render3DEvent;
 import xyz.qweru.pulse.client.systems.modules.Category;
@@ -17,6 +16,7 @@ import xyz.qweru.pulse.client.systems.modules.settings.impl.BooleanSetting;
 import xyz.qweru.pulse.client.systems.modules.settings.impl.ColorSetting;
 import xyz.qweru.pulse.client.systems.modules.settings.impl.ModeSetting;
 import xyz.qweru.pulse.client.systems.modules.settings.impl.NumberSetting;
+import xyz.qweru.pulse.client.utils.Util;
 import xyz.qweru.pulse.client.utils.world.BlockUtil;
 import xyz.qweru.pulse.client.utils.world.HoleUtil;
 
@@ -112,6 +112,24 @@ public class HoleESP extends ClientModule {
             .setColor(Color.RED)
             .build();
 
+    ColorSetting unbreakableOutline = new ColorSettingBuilder()
+            .setName("Full bedrock outline")
+            .setDescription("Color used for full bedrock holes / burrow blocks")
+            .setColor(Color.GREEN.darker())
+            .build();
+
+    ColorSetting mixedOutline = new ColorSettingBuilder()
+            .setName("Mixed outline")
+            .setDescription("Color used for mixed holes / burrow blocks")
+            .setColor(Color.ORANGE.darker())
+            .build();
+
+    ColorSetting breakableOutline = new ColorSettingBuilder()
+            .setName("Full obsidian outline")
+            .setDescription("Color used for full obsidian holes / burrow blocks")
+            .setColor(Color.RED.darker())
+            .build();
+
     BooleanSetting showFull = booleanSetting()
             .name("Render bedrock holes")
             .description("Should render full bedrock holes")
@@ -130,14 +148,30 @@ public class HoleESP extends ClientModule {
             .defaultValue(true)
             .build();
 
+    NumberSetting holeHeight = numberSetting()
+            .name("Hole height")
+            .description("Hole height")
+            .range(0, 1)
+            .defaultValue(0.01f)
+            .setValueModifier(value -> (float) Util.round(value, 3))
+            .build();
+
+    NumberSetting burrowHeight = numberSetting()
+            .name("Burrow height")
+            .description("Burrow height")
+            .range(0, 1)
+            .defaultValue(1)
+            .setValueModifier(value -> (float) Util.round(value, 3))
+            .build();
+
     public HoleESP() {
         builder(this)
                 .name("SafeESP")
                 .description("Renders safe holes / burrow blocks")
                 .category(Category.RENDER)
-                .settings("Holes", renderHoles, holeRenderMode, holeOpacity, holeRange, showFull, showMixed, showObby)
-                .settings("Burrow", renderBurrowBlocks, burrowBlockRenderMode, burrowOpacity, burrowRange)
-                .settings("Color", unbreakable, mixed, breakable);
+                .settings("Holes", renderHoles, holeRenderMode, holeOpacity, holeRange, holeHeight, showFull, showMixed, showObby)
+                .settings("Burrow", renderBurrowBlocks, burrowBlockRenderMode, burrowOpacity, burrowRange, burrowHeight)
+                .settings("Color", unbreakable, unbreakableOutline, mixed, mixedOutline, breakable, breakableOutline);
 
         renderHoles.addOnToggle(() -> {
             holeRenderMode.setShouldShow(renderHoles.isEnabled());
@@ -198,44 +232,29 @@ public class HoleESP extends ClientModule {
                     default -> throw new IllegalStateException("Unexpected value: " + hole.safety());
                 };
 
+                Color outline = switch (hole.safety()) {
+                    case UNBREAKABLE -> unbreakableOutline.getJavaColor();
+                    case PARTIALLY_UNBREAKABLE -> mixedOutline.getJavaColor();
+                    case BREAKABLE -> breakableOutline.getJavaColor();
+                    default -> throw new IllegalStateException("Unexpected value: " + hole.safety());
+                };
+
                 for (BlockPos blockPos : hole.air()) {
                     switch (holeRenderMode.getCurrent().toLowerCase()) {
                         case "full block" -> Renderer3d.renderEdged(event.getMatrixStack(),
                                 fill,
-                                Pulse2D.injectAlpha(fill.darker(), 255),
+                                outline,
                                 new Vec3d(blockPos.getX(), blockPos.getY(), blockPos.getZ()),
                                 new Vec3d(1, 1, 1)
                         );
                         case "block face" -> Renderer3d.renderEdged(event.getMatrixStack(),
                                 fill,
-                                Pulse2D.injectAlpha(fill.darker(), 255),
+                                outline,
                                 new Vec3d(blockPos.getX(), blockPos.getY(), blockPos.getZ()),
                                 new Vec3d(1, 0.01, 1));
                     }
                 }
             }
-        }
-    }
-
-    void drawHoleAt(BlockPos pos, int safetyLevel, MatrixStack stack) {
-        if(!BlockUtil.getBlockAt(pos.add(0, 1, 0)).equals(Blocks.AIR)) return;
-
-        final Color colorFill = safetyLevel == 3 ? new Color(0, 255, 0, ((int) holeOpacity.getValue())) :
-                (safetyLevel <= 1 ? new Color(255, 0, 0, ((int) holeOpacity.getValue())) : new Color(255, 255, 0, ((int) holeOpacity.getValue())));
-        final Color colorEdge = safetyLevel == 3 ? Color.GREEN.darker() :
-                (safetyLevel <= 1 ? Color.RED.darker() : Color.YELLOW.darker());
-        switch (holeRenderMode.getCurrent().toLowerCase()) {
-            case "full block" -> Renderer3d.renderEdged(stack,
-                    colorFill,
-                    colorEdge,
-                    new Vec3d(pos.getX(), pos.getY(), pos.getZ()),
-                    new Vec3d(1, 1, 1)
-            );
-            case "block face" -> Renderer3d.renderEdged(stack,
-                    colorFill,
-                    colorEdge,
-                    new Vec3d(pos.getX(), pos.toBottomCenterPos().getY(), pos.getZ()),
-                    new Vec3d(1, 0.01, 1));
         }
     }
 

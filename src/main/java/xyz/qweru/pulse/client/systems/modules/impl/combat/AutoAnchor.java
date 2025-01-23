@@ -16,6 +16,8 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.*;
 import xyz.qweru.pulse.client.PulseClient;
 import xyz.qweru.pulse.client.managers.Managers;
+import xyz.qweru.pulse.client.render.renderer.Pulse3D;
+import xyz.qweru.pulse.client.render.world.blocks.FadeInBlock;
 import xyz.qweru.pulse.client.render.world.blocks.FadeOutBlock;
 import xyz.qweru.pulse.client.systems.events.InstamineEvent;
 import xyz.qweru.pulse.client.systems.events.Render3DEvent;
@@ -35,6 +37,7 @@ import xyz.qweru.pulse.client.utils.player.ChatUtil;
 import xyz.qweru.pulse.client.utils.player.InventoryUtils;
 import xyz.qweru.pulse.client.utils.player.SlotUtil;
 import xyz.qweru.pulse.client.utils.thread.ThreadManager;
+import xyz.qweru.pulse.client.utils.timer.TimerUtil;
 import xyz.qweru.pulse.client.utils.world.BlockUtil;
 import xyz.qweru.pulse.client.utils.world.PacketUtil;
 import xyz.qweru.pulse.client.utils.world.PosUtil;
@@ -341,6 +344,10 @@ public class AutoAnchor extends ClientModule {
                 futureAnchorLocations.add(bestPlacement);
             }
         }
+        if(futureAnchorLocations.isEmpty()) return;
+        // only 1 anchor pos per placement
+        futureAnchorLocations.sort(Comparator.comparingDouble(location -> location.pos.distanceTo(mc.player.getPos())));
+        futureAnchorLocations = new ArrayList<>(List.of(futureAnchorLocations.get(0)));
     }
 
     AnchorData getBestDamage(List<AnchorData> placements) {
@@ -491,17 +498,31 @@ public class AutoAnchor extends ClientModule {
                 } catch (Exception ignored) {}
             }
         }
-        if(render.isEnabled()) fades.add(new FadeOutBlock(BlockPos.ofFloored(pos), color.getJavaColor(), color.getJavaColor().darker(), 450));
+        if(render.isEnabled()) {
+            BlockPos bp = BlockPos.ofFloored(pos);
+            if(!bp.equals(last)) {
+                fades.add(new FadeOutBlock(BlockPos.ofFloored(pos), color.getJavaColor(), color.getJavaColor().darker(), 550));
+                last = bp;
+            }
+            lastTimer.reset();
+        }
     }
+    BlockPos last = null;
+    TimerUtil lastTimer = new TimerUtil();
 
-    CopyOnWriteArrayList<FadeOutBlock> fades = new CopyOnWriteArrayList<>();
+    ArrayList<FadeOutBlock> fades = new ArrayList<>();
     @EventHandler
     private void render3D(Render3DEvent e) {
         if(!render.isEnabled()) return;
-        Renderer3d.renderThroughWalls();
-        for (int i = 0; i < fades.size(); i++) {
-            FadeOutBlock block = fades.get(i);
-            if(block.hasFaded()) fades.remove(i);
+        if(lastTimer.hasReached(1000)) {
+            last = null;
+        } else if(last != null){
+            Pulse3D.renderEdged(e.getMatrixStack(), color.getJavaColor(), color.getJavaColor().darker(), Vec3d.of(last), new Vec3d(1, 1, 1));
+        }
+        Iterator<FadeOutBlock> i = fades.iterator();
+        while (i.hasNext()) {
+            FadeOutBlock block = i.next();
+            if(block.hasFaded()) i.remove();
             else block.render(e.getMatrixStack());
         }
     }

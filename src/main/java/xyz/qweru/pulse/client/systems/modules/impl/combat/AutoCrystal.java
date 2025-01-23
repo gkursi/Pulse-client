@@ -585,7 +585,7 @@ public class AutoCrystal extends ClientModule {
 
     List<FadeOutBlock> fades = new ArrayList<>();
     Vec3d lastPos = null;
-    FadeUtils animation = new FadeUtils(450);
+    FadeUtils animation = new FadeUtils(250);
     @EventHandler
     private void render3D(Render3DEvent e) {
         if(!render.isEnabled()) return;
