@@ -131,14 +131,13 @@ public class PlayerUtil {
             return ActionResult.PASS;
         } else {
             if(slot != -1) PacketUtil.send(new UpdateSelectedSlotC2SPacket(slot));
-            MutableObject<ActionResult> mutableObject = new MutableObject();
+            MutableObject<ActionResult> mutableObject = new MutableObject<>();
             Hand finalHand = hand;
             PacketUtil.sendSequencedPacket(mc.world, (sequence) -> {
                 PlayerInteractItemC2SPacket playerInteractItemC2SPacket = new PlayerInteractItemC2SPacket(finalHand, sequence, yaw, pitch);
                 ItemStack itemStack = slot == -1 ? mc.player.getOffHandStack() : player.getInventory().getStack(slot);
                 if (player.getItemCooldownManager().isCoolingDown(itemStack.getItem())) {
                     mutableObject.setValue(ActionResult.PASS);
-                    return playerInteractItemC2SPacket;
                 } else {
                     TypedActionResult<ItemStack> typedActionResult = itemStack.use(mc.world, player, finalHand);
                     ItemStack itemStack2 = (ItemStack)typedActionResult.getValue();
@@ -147,8 +146,8 @@ public class PlayerUtil {
                     }
 
                     mutableObject.setValue(typedActionResult.getResult());
-                    return playerInteractItemC2SPacket;
                 }
+                return playerInteractItemC2SPacket;
             });
             return (ActionResult)mutableObject.getValue();
         }

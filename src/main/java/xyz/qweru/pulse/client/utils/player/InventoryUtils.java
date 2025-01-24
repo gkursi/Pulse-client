@@ -2,17 +2,28 @@ package xyz.qweru.pulse.client.utils.player;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.entity.effect.StatusEffect;
+import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.item.PotionItem;
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
+import net.minecraft.registry.Registries;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.screen.slot.SlotActionType;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import org.lwjgl.glfw.GLFW;
 import xyz.qweru.pulse.client.utils.annotations.ExcludeModule;
 import xyz.qweru.pulse.client.utils.world.PacketUtil;
+
+import java.util.Optional;
+import java.util.function.Predicate;
 
 @ExcludeModule
 public class InventoryUtils {
@@ -77,6 +88,39 @@ public class InventoryUtils {
         return -1;
     }
 
+    public static int getItemSlotAll(Predicate<ItemStack> predicate) {
+        int i;
+        assert mc.player != null;
+        for (i = 0; i <= 36; i++) {
+            if (predicate.test(mc.player.getInventory().getStack(i))) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    public static int getPotionEffectsAll(RegistryEntry<StatusEffect>... effects) {
+        for (int i = 0; i <= 36; i++) {
+            if (mc.player.getInventory().getStack(i).getItem() instanceof PotionItem pi) {
+                for (StatusEffectInstance effect : pi.getComponents().get(DataComponentTypes.POTION_CONTENTS).getEffects()) {
+                    for (RegistryEntry<StatusEffect> statusEffect : effects) {
+                        if(effect.getEffectType().equals(statusEffect)) return i;
+                    }
+                }
+            }
+        }
+        return -1;
+    }
+
+    public static boolean hasEffect(RegistryEntry<StatusEffect> effectTarget, Item item) {
+        if (item instanceof PotionItem pi) {
+            for (StatusEffectInstance effect : pi.getComponents().get(DataComponentTypes.POTION_CONTENTS).getEffects()) {
+                if(effect.getEffectType().equals(effectTarget)) return true;
+            }
+        }
+        return false;
+    }
+
     public static void selectSlot(int slot) {
         mc.player.getInventory().selectedSlot = slot;
     }
@@ -99,6 +143,16 @@ public class InventoryUtils {
         int n = 0;
         for (int i = 0; i <= 36; i++) {
             if (mc.player.getInventory().getStack(i).getItem().equals(item)) {
+                n += mc.player.getInventory().getStack(i).getCount();
+            }
+        }
+        return n;
+    }
+
+    public static int totalItemCount(Predicate<ItemStack> itemTest) {
+        int n = 0;
+        for (int i = 0; i <= 36; i++) {
+            if (itemTest.test(mc.player.getInventory().getStack(i))) {
                 n += mc.player.getInventory().getStack(i).getCount();
             }
         }

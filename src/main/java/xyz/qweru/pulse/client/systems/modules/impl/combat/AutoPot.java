@@ -1,8 +1,10 @@
 package xyz.qweru.pulse.client.systems.modules.impl.combat;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.item.Items;
+import net.minecraft.entity.effect.StatusEffect;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.network.packet.c2s.play.PickFromInventoryC2SPacket;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.Hand;
 import xyz.qweru.pulse.client.systems.events.WorldTickEvent;
 import xyz.qweru.pulse.client.systems.modules.Category;
@@ -23,9 +25,24 @@ public class AutoPot extends ClientModule {
             .description("Dupe the pots")
             .build();
 
+    BooleanSetting throwHealth = booleanSetting()
+            .name("Instant Health")
+            .description("Throw health potions")
+            .build();
+
+    BooleanSetting throwRes = booleanSetting()
+            .name("Resistance")
+            .description("Throw resistance potions")
+            .build();
+
+    BooleanSetting throwStrength = booleanSetting()
+            .name("Strength")
+            .description("Throw strength potions")
+            .build();
+
     NumberSetting health = numberSetting()
             .name("Health")
-            .description("At what HP to start throwing")
+            .description("At what HP to start throwing health pots")
             .range(0, 36)
             .defaultValue(10)
             .stepFullNumbers()
@@ -42,6 +59,7 @@ public class AutoPot extends ClientModule {
                 .name("Spam Pot")
                 .description("Automatically spams splash pots")
                 .settings(redupe, dupeText, health)
+                .settings("Potions", throwHealth, throwRes, throwStrength)
                 .category(Category.COMBAT);
     }
 
@@ -52,19 +70,25 @@ public class AutoPot extends ClientModule {
             skip = false;
             return;
         } else skip = true;
-        if(mc.player.getHealth() <= health.getValue()) {
-            int count = InventoryUtils.totalItemCount(Items.SPLASH_POTION);
-            if(count <= 2 && redupe.isEnabled()) dupe();
-            else throwPot();
+        int count = InventoryUtils.totalItemCount(itemStack -> InventoryUtils.hasEffect(StatusEffects.INSTANT_HEALTH, itemStack.getItem()));
+        if(count <= 3 && redupe.isEnabled()) {
+            ChatUtil.sendServerMsg("/dupe 4 " + dupeText.getValue());
+            return;
+        }
+        if(mc.player.getHealth() <= health.getValue() && throwHealth.isEnabled()) {
+            throwPot(StatusEffects.INSTANT_HEALTH, StatusEffects.REGENERATION);
+        }
+        if(throwRes.isEnabled() && mc.player.getStatusEffect(StatusEffects.RESISTANCE) == null) {
+            throwPot(StatusEffects.RESISTANCE);
+        }
+        if(throwStrength.isEnabled() && mc.player.getStatusEffect(StatusEffects.STRENGTH) == null) {
+            throwPot(StatusEffects.STRENGTH);
         }
     }
 
-    void dupe() {
-        ChatUtil.sendServerMsg("/dupe 4 " + dupeText.getValue());
-    }
-
-    void throwPot() {
-        int slot = InventoryUtils.getItemSlotAll(Items.SPLASH_POTION);
+    @SafeVarargs
+    final void throwPot(RegistryEntry<StatusEffect>... effects) {
+        int slot = InventoryUtils.getPotionEffectsAll(effects);
         if(slot == -1) return;
         pickSwitch(slot);
         PlayerUtil.interact(mc.player, Hand.MAIN_HAND, mc.player.getInventory().selectedSlot, 90, mc.player.getYaw());
@@ -73,14 +97,11 @@ public class AutoPot extends ClientModule {
 
     int pickSlot = -1;
 
-    boolean pickSwitch(int slot) {
+    void pickSwitch(int slot) {
         if (slot >= 0) {
             pickSlot = slot;
             mc.getNetworkHandler().sendPacket(new PickFromInventoryC2SPacket(slot));
-
-            return true;
         }
-        return false;
     }
     void pickSwapBack() {
         if (pickSlot >= 0) {

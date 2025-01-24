@@ -1,6 +1,5 @@
 package xyz.qweru.pulse.client.systems.modules.impl.combat;
 
-import me.x150.renderer.render.Renderer3d;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -17,7 +16,6 @@ import net.minecraft.util.math.*;
 import xyz.qweru.pulse.client.PulseClient;
 import xyz.qweru.pulse.client.managers.Managers;
 import xyz.qweru.pulse.client.render.renderer.Pulse3D;
-import xyz.qweru.pulse.client.render.world.blocks.FadeInBlock;
 import xyz.qweru.pulse.client.render.world.blocks.FadeOutBlock;
 import xyz.qweru.pulse.client.systems.events.InstamineEvent;
 import xyz.qweru.pulse.client.systems.events.Render3DEvent;
@@ -44,7 +42,6 @@ import xyz.qweru.pulse.client.utils.world.PosUtil;
 
 import java.util.*;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import static xyz.qweru.pulse.client.PulseClient.mc;
 
@@ -198,7 +195,7 @@ public class AutoAnchor extends ClientModule {
             .defaultValue(true)
             .build();
 
-    BooleanSetting pauseOnSurrond = booleanSetting()
+    BooleanSetting pauseOnSurround = booleanSetting()
             .name("Pause on surround")
             .description("Pause module when surround is placing")
             .defaultValue(true)
@@ -247,7 +244,7 @@ public class AutoAnchor extends ClientModule {
                 .settings("Misc", performanceMode, performanceModeTicks, placeSort, silentSwitch, placeMode, placeCheckMode, redupe)
                 .settings("Render", render, color, swing)
                 .settings("Extrapolation", extrapolate, extrapolationTicks)
-                .settings("Pause", pauseOnUse, pauseOnSurrond)
+                .settings("Pause", pauseOnUse, pauseOnSurround)
                 .settings("Instamine place", prePlace, placeOnInstamine, onlyOncePerTick)
                 .category(Category.COMBAT);
     }
@@ -259,14 +256,10 @@ public class AutoAnchor extends ClientModule {
     private void tick(WorldTickEvent.Post e) {
         placed = false;
         if(mc.player.getHealth() < minSelfHealth.getValue()) {
-//            PulseClient.LOGGER.info("Health too low!");
             return;
         }
-//        PulseClient.LOGGER.info("Crystal Aura > Tick");
         if(performanceMode.isEnabled()) {
-//            PulseClient.LOGGER.info("Performance mode enabled");
             if(ptCounter == 0) {
-//                PulseClient.LOGGER.info("[Performance mode] calculating placements");
                 calcPlacements();
                 ptCounter++;
             } else if(ptCounter >= performanceModeTicks.getValue()) {
@@ -456,7 +449,7 @@ public class AutoAnchor extends ClientModule {
     }
 
     void doAnchor(AnchorData anchorData) {
-        if(pauseOnSurrond.isEnabled() && Surround.placing) return;
+        if(pauseOnSurround.isEnabled() && Surround.placing) return;
         if(anchorData.placeAnchor) {
             Util.sleep(((long) anchorDelay.getValue()));
             if (swing.isEnabled() && !mc.player.handSwinging) mc.player.swingHand(Hand.MAIN_HAND);
@@ -514,7 +507,8 @@ public class AutoAnchor extends ClientModule {
     @EventHandler
     private void render3D(Render3DEvent e) {
         if(!render.isEnabled()) return;
-        if(lastTimer.hasReached(1000)) {
+        if(lastTimer.hasReached(200) && last != null) {
+            fades.add(new FadeOutBlock(last, color.getJavaColor(), color.getJavaColor().darker(), 550));
             last = null;
         } else if(last != null){
             Pulse3D.renderEdged(e.getMatrixStack(), color.getJavaColor(), color.getJavaColor().darker(), Vec3d.of(last), new Vec3d(1, 1, 1));
