@@ -3,6 +3,8 @@ package xyz.qweru.pulse.client.systems.modules.impl.movement;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.option.GameOptions;
+import net.minecraft.entity.EntityPose;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
@@ -10,10 +12,13 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.World;
 import xyz.qweru.pulse.client.mixin.iinterface.IPlayerPositionLookS2CPacket;
 import xyz.qweru.pulse.client.systems.events.HandlePacketEvent;
+import xyz.qweru.pulse.client.systems.events.WorldTickEvent;
 import xyz.qweru.pulse.client.systems.modules.Category;
 import xyz.qweru.pulse.client.systems.modules.ClientModule;
 import xyz.qweru.pulse.client.systems.modules.settings.impl.BooleanSetting;
@@ -33,9 +38,14 @@ public class PearlPhase extends ClientModule {
         builder(this)
                 .name("PearlPhase")
                 .description("Automatically phase in to the wall using ender pearls")
-                .settings(silentSwitch, pearlRotMode, noPearlRot, placeBlock, blockMode, delay, jump)
+                .settings(silentSwitch, pearlRotMode, noPearlRot, autoTrigger, triggerExpansion, placeBlock, blockMode, delay, jump)
                 .category(Category.MOVEMENT);
     }
+
+    BooleanSetting autoTrigger = booleanSetting()
+            .name("Auto trigger")
+            .description("Automatically decide when to throw pearls")
+            .build();
 
     BooleanSetting silentSwitch = booleanSetting()
             .name("Silent switch")
@@ -46,7 +56,6 @@ public class PearlPhase extends ClientModule {
     BooleanSetting jump = booleanSetting()
             .name("Jump")
             .description("Jump just before throwing the pearl, bypasses some anticheats")
-            .defaultValue(true)
             .build();
 
     BooleanSetting noPearlRot = booleanSetting()
@@ -56,7 +65,7 @@ public class PearlPhase extends ClientModule {
             .build();
 
     ModeSetting pearlRotMode = modeSetting()
-            .name("Pearl rotation mode")
+            .name("Mode")
             .description("mode")
             .defaultMode("Simple")
             .mode("Smart")
@@ -66,7 +75,6 @@ public class PearlPhase extends ClientModule {
     BooleanSetting placeBlock = booleanSetting()
             .name("Place block")
             .description("Ignore ender pearl rotation")
-            .defaultValue(true)
             .build();
 
     ModeSetting blockMode = modeSetting()
@@ -85,10 +93,18 @@ public class PearlPhase extends ClientModule {
             .stepFullNumbers()
             .build();
 
+    NumberSetting triggerExpansion = numberSetting()
+            .name("Trigger size")
+            .description("pearl trigger size")
+            .range(0, 1)
+            .defaultValue(0.5f)
+            .setValueModifier(value -> (float) Util.round(value, 2))
+            .build();
+
     @Override
     public void enable() {
         super.enable();
-        if(Util.nullCheck()) return;
+        if(Util.nullCheck() || autoTrigger.isEnabled()) return;
         execute();
         if(!noPearlRot.isEnabled()) this.toggle();
     }
@@ -123,6 +139,38 @@ public class PearlPhase extends ClientModule {
         }
 
         return mc.player.getMovementDirection();
+    }
+
+    @EventHandler
+    void t(WorldTickEvent.Post e) {
+        if(!autoTrigger.isEnabled()) return;
+        if(checkCollision()) execute();
+    }
+
+    // check if player is running in to a block
+    boolean checkCollision() {
+        PlayerEntity player = mc.player;
+        World world = player.getWorld();
+        if(mc.player.isInsideWall() || !world.getBlockState(mc.player.getBlockPos()).isReplaceable() || mc.player.getPose().equals(EntityPose.SWIMMING)) return false; // dont pearl if already phased or if in crawl
+
+        Box playerBox = player.getBoundingBox();
+        double expansion = triggerExpansion.getValue();
+        Box expandedBox = playerBox.stretch(
+                Math.max(player.getVelocity().x, 1) * expansion,
+                0,
+                Math.max(player.getVelocity().z, 1) * expansion
+        );
+
+        for (BlockPos pos : BlockPos.stream(expandedBox).map(BlockPos::toImmutable).toList()) {
+            if (!world.isAir(pos)) {
+                Box blockBox = world.getBlockState(pos).getCollisionShape(world, pos).getBoundingBox();
+                if (blockBox != null && blockBox.offset(pos).intersects(expandedBox) && !blockBox.offset(pos).intersects(playerBox)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     void execute() {
@@ -171,7 +219,7 @@ public class PearlPhase extends ClientModule {
         if(Util.nullCheck()) return;
         if(e.getPacket() instanceof PlayerPositionLookS2CPacket packet && noPearlRot.isEnabled()) {
             ((IPlayerPositionLookS2CPacket) packet).pulse$setLook(mc.player.getPitch(), mc.player.getYaw());
-            this.toggle();
+            if(!autoTrigger.isEnabled()) this.toggle();
         }
     }
 
