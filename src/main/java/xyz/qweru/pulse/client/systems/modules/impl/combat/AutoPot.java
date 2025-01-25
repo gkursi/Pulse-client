@@ -3,6 +3,7 @@ package xyz.qweru.pulse.client.systems.modules.impl.combat;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.PickFromInventoryC2SPacket;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.Hand;
@@ -70,7 +71,7 @@ public class AutoPot extends ClientModule {
             skip = false;
             return;
         } else skip = true;
-        int count = InventoryUtils.totalItemCount(itemStack -> InventoryUtils.hasEffect(StatusEffects.INSTANT_HEALTH, itemStack.getItem()));
+        int count = InventoryUtils.totalItemCount(Items.SPLASH_POTION);
         if(count <= 3 && redupe.isEnabled()) {
             ChatUtil.sendServerMsg("/dupe 4 " + dupeText.getValue());
             return;
